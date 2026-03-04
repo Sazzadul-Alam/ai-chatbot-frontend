@@ -272,7 +272,7 @@
   padding: 0 16px;
   border-bottom: 1px solid rgba(0, 200, 255, 0.07);
   flex-shrink: 0;
-  background: transparent;
+  background: #000000D9;
 }
 
 .topbar-btn {
@@ -702,7 +702,7 @@
   position: absolute;
   inset: 3px;
   border-radius: 11px;
-  background: #060e20;
+  background: #000000;
   z-index: 0;
   pointer-events: none;
 }
