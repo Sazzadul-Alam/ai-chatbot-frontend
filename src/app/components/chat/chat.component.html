@@ -68,18 +68,19 @@
     <div class="topbar">
       <button class="topbar-btn" (click)="sidebarOpen = !sidebarOpen" title="Toggle sidebar">
         <span *ngIf="sidebarOpen">
-          <svg  width="50" height="15" viewBox="0 0 50 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg  width="38" height="10" viewBox="0 0 50 33" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 0H27.7778V5.5H0V0ZM0 27.5H27.7778V33H0V27.5ZM0 13.75H33.3333V19.25H0V13.75ZM36.1111 2.75L32.1667 6.5725L42.0556 16.5L32.1667 26.4275L36.1111 30.25L50 16.5L36.1111 2.75Z" fill="white"/>
         </svg>
         </span>
 
         <span *ngIf="!sidebarOpen">
-          <svg  width="50" height="15" viewBox="0 0 50 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg  width="38" height="10" viewBox="0 0 50 34" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 33.3333V27.7778H36.1111V33.3333H0ZM46.1111 30.5556L32.2222 16.6667L46.1111 2.77778L50 6.66667L40 16.6667L50 26.6667L46.1111 30.5556ZM0 19.4444V13.8889H27.7778V19.4444H0ZM0 5.55556V0H36.1111V5.55556H0Z" fill="#898989"/>
         </svg>
         </span>
 
       </button>
+      <h3 style="color:white;text-align: center ">AIAN PROMPT</h3>
 <!--      <button class="topbar-btn" title="Settings">-->
 <!--        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
 <!--          <circle cx="12" cy="12" r="3"/>-->
@@ -90,8 +91,8 @@
 
     <!-- WELCOME STATE -->
     <div class="welcome" *ngIf="messages.length === 0">
-      <h1 class="w-title">DataSoft AI</h1>
-      <p class="w-sub">Type a message or upload files to get started</p>
+      <h1 class="w-title">Hello I am AIAN</h1>
+      <p class="w-sub">I am here to make your life easier. Use me generate ideas, write mails, solve complex computational problem</p>
     </div>
 
     <!-- MESSAGES -->

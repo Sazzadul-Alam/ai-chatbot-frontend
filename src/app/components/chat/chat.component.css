@@ -18,8 +18,8 @@
   --blue:       #1C45C1;
   --green:      #22c55e;
   --red:        #ef4444;
-  --text1:      #ffffff;
-  --text2:      #ffffff;
+  --text1:      white;
+  --text2:      white;
   --text3:      rgba(255,255,255,0.55);
   --text4:      rgba(255,255,255,0.35);
 }
@@ -43,7 +43,7 @@
 /* ──────────── SIDEBAR ──────────── */
 .sidebar {
   width: 240px;
-  background: rgba(4, 10, 28, 0.9);
+  background: #000000D9;
   border-right: 1px solid rgba(0, 200, 255, 0.08);
   backdrop-filter: blur(12px);
   display: flex;
@@ -103,8 +103,8 @@
   gap: 7px;
   width: 100%;
   padding: 8px 12px;
-  background: rgba(0, 200, 255, 0.06);
-  border: 1px solid rgba(0, 200, 255, 0.15);
+  background: #000000;
+  border: 1px solid #03E6FF;
   border-radius: 8px;
   color: #B9B9B9;
   font-family: 'DM Sans', sans-serif;
@@ -148,20 +148,20 @@
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: 7px;
   cursor: pointer;
   transition: background 0.12s;
+  border: 1px solid #5F5F5F;
 }
 
 .conv-row:hover {
-  background: rgba(0, 200, 255, 0.06);
+  background: #000000;
 }
 
 .conv-row:hover .conv-del { opacity: 1; }
 
 .conv-row.active {
-  background: rgba(0, 200, 255, 0.08);
-  border-left: 2px solid var(--cyan-dim);
+  background: #000000;
+  border: 1px solid #03E6FF;
   padding-left: 8px;
 }
 
@@ -268,11 +268,17 @@
   height: 52px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 16px;
   border-bottom: 1px solid rgba(0, 200, 255, 0.07);
   flex-shrink: 0;
   background: #000000D9;
+  margin-top: 12px;
+}
+.topbar h3 {
+  flex: 1;
+  text-align: center;
+  color: white;
+  margin: 0;
 }
 
 .topbar-btn {
@@ -307,14 +313,14 @@
 
 .w-title {
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 200;
   color: white;
   letter-spacing: -0.8px;
 }
 
 .w-sub {
   font-size: 14px;
-  color: rgba(255,255,255,0.6);
+  color: white;
   letter-spacing: -0.2px;
 }
 
@@ -324,6 +330,7 @@
   overflow-y: auto;
   position: relative;
   background: transparent;
+  margin-top: 10px;
 }
 
 .msgs::-webkit-scrollbar { width: 4px; }
@@ -360,6 +367,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  background-color: #000000D9;
 }
 
 /* ── MESSAGE ── */
@@ -569,7 +577,7 @@
 }
 
 .reasoning-section .answer-label {
-  color: rgba(255, 255, 255, 0.75);
+  color: white;
 }
 
 .final-section {
@@ -647,7 +655,7 @@
   border: 1px solid rgba(0, 200, 255, 0.18);
   border-radius: 5px;
   background: rgba(0, 200, 255, 0.05);
-  color: rgba(255, 255, 255, 0.75);
+  color: white;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -658,7 +666,7 @@
 .edit-prompt-btn:hover {
   background: rgba(0, 200, 255, 0.14);
   border-color: rgba(0, 200, 255, 0.4);
-  color: #ffffff;
+  color: white;
 }
 
 /* ── INPUT ── */
@@ -818,7 +826,7 @@
 .send-btn.ready {
   background: var(--cyan);
   border-color: var(--cyan);
-  color: #ffffff;
+  color: white;
   cursor: pointer;
   box-shadow: 0 0 12px rgba(0, 200, 255, 0.4);
 }
@@ -845,12 +853,12 @@
 }
 
 .hint-bar kbd {
-  background: rgba(0, 200, 255, 0.06);
+  background: #33d6ff;
   border: 1px solid rgba(0, 200, 255, 0.12);
   border-radius: 4px;
   padding: 1px 5px;
   font-size: 10px;
-  color: rgba(255,255,255,0.4);
+  color: black;
   font-family: 'DM Sans', sans-serif;
 }
 
@@ -886,7 +894,7 @@
 .markdown-body blockquote {
   border-left: 3px solid rgba(0,200,255,0.3);
   padding: 8px 14px;
-  color: rgba(255,255,255,0.7);
+  color: white;
   margin: 12px 0;
   font-style: italic;
   background: rgba(0,200,255,0.04);
@@ -943,7 +951,7 @@
 .markdown-body .code-lang {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: white;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-family: 'DM Sans', sans-serif;
@@ -954,7 +962,7 @@
   height: 28px;
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.75);
+  color: white;
   padding: 0;
   border-radius: 7px;
   cursor: pointer;
@@ -1004,7 +1012,7 @@
   background: none !important;
   border: none !important;
   padding: 0 !important;
-  color: #f0f3f8;
+  color: white;
   font-family: 'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.65;
@@ -1049,12 +1057,12 @@
 }
 
 .markdown-body .fl-table thead th {
-  color: #ffffff;
+  color: white;
   background: #4fc3a1;
 }
 
 .markdown-body .fl-table thead th:nth-child(odd) {
-  color: #ffffff;
+  color: white;
   background: #324960;
 }
 
@@ -1073,7 +1081,7 @@
     display: block;
     text-align: right;
     font-size: 11px;
-    color: #ffffff;
+    color: white;
     padding: 0 0 10px;
   }
 
