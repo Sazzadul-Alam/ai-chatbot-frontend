@@ -144,7 +144,10 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   <div class="code-header" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.08);min-height:38px;">
     <span class="code-lang" style="font-size:11px;font-weight:700;color:#C3C3C3;text-transform:uppercase;letter-spacing:.6px;">${dl}</span>
     <button class="code-copy-btn" type="button" title="Copy code" style="width:28px;height:28px;background:transparent;border:1px solid rgba(255,255,255,.14);color:#C3C3C3;padding:0;border-radius:7px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2" ry="2"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg>
+      <svg viewBox="0 0 24 24" fill="white" aria-hidden="true">
+  <rect x="9" y="9" width="10" height="10" rx="2" ry="2"/>
+  <path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/>
+</svg>
     </button>
   </div>
   <pre class="language-${dl}" style="margin:0;padding:16px 18px 18px;overflow-x:auto;background:transparent;line-height:1.65;"><code class="language-${dl}" style="background:none;border:none;padding:0;color:${isTerm ? '#f6c177' : '#f0f3f8'};font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:13px;white-space:pre;">${esc}</code></pre>
