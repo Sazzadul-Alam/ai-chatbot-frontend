@@ -1,0 +1,191 @@
+
+/* Modal Styles - Add to your component's stylesheet or global styles */
+
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.auth-modal {
+  background: url('/assets/images/modal-background.svg')  center/cover no-repeat;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 370px;
+  padding: 32px 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.auth-modal-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+
+.auth-logo {
+  width: 90px;
+  height: 60px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.auth-logo img {
+  width: 100%;
+  height: auto;
+}
+
+.auth-modal-header h2 {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.auth-modal-header p {
+  color: #888888;
+  font-size: 14px;
+  margin: 0;
+}
+
+.auth-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 11px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.auth-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.auth-btn:hover svg {
+  transform: translateX(2px);
+}
+
+.signin-btn {
+  background: linear-gradient(90deg, #000000 0%, #000C1E 100%);
+  color: white;
+  border: 0.8px solid #274A57;
+  box-shadow: 0px 2px 16px 0px #9DC4FF80 inset;
+  box-shadow: 0px -2px 18px 0px #87CDFF80 inset;
+
+}
+
+.signin-btn:hover {
+  background: linear-gradient(90deg, #004D83 0%, #005794 100%);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.signup-btn {
+  background: linear-gradient(90deg, #000000 0%, #000C1E 100%);
+  color: white;
+  border: 0.8px solid #274A57;
+  box-shadow: 0px 2px 16px 0px #9DC4FF80 inset;
+  box-shadow: 0px -2px 18px 0px #87CDFF80 inset;
+}
+
+.signup-btn:hover {
+  background: linear-gradient(90deg, #004D83 0%, #005794 100%);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.guest-btn {
+  background: linear-gradient(90deg, #000000 0%, #000C1E 100%);
+  color: white;
+  border: 0.8px solid #274A57;
+  box-shadow: 0px 2px 16px 0px #9DC4FF80 inset;
+  box-shadow: 0px -2px 18px 0px #87CDFF80 inset;
+}
+
+.guest-btn:hover {
+  background: linear-gradient(90deg, #004D83 0%, #005794 100%);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.auth-modal-footer {
+  text-align: center;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legal-note {
+  font-size: 12px;
+  color: #666666;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .auth-modal {
+    padding: 24px 20px;
+    max-width: 90%;
+  }
+
+  .auth-modal-header h2 {
+    font-size: 24px;
+  }
+
+  .auth-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+}
+/*.shell {*/
+/*  background:*/
+/*    url('/assets/images/modal-background.svg');*/
+/*}*/

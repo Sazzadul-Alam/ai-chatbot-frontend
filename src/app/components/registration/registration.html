@@ -1,0 +1,139 @@
+<div class="auth-modal-overlay shell">
+  <div class="auth-modal">
+
+    <div class="auth-modal-header">
+      <h2>Create an account</h2>
+      <p>Enter details to create an account.</p>
+    </div>
+
+    <form class="auth-form" (ngSubmit)="onSubmit()" #regForm="ngForm" novalidate>
+
+      <!-- Error message -->
+      <div class="error-banner" *ngIf="errorMsg">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ errorMsg }}
+      </div>
+
+      <!-- User Name -->
+      <div class="field-group">
+        <label class="field-label">User Name</label>
+        <div class="input-wrap">
+          <input
+            class="field-input"
+            type="text"
+            placeholder="Sazzadul Alam"
+            [(ngModel)]="userName"
+            name="userName"
+            autocomplete="name"
+          />
+        </div>
+      </div>
+
+      <!-- Email Address -->
+      <div class="field-group">
+        <label class="field-label">Email Address</label>
+        <div class="input-wrap">
+          <input
+            class="field-input"
+            type="email"
+            placeholder="sazzadul@gmail.com"
+            [(ngModel)]="email"
+            name="email"
+            autocomplete="email"
+          />
+        </div>
+      </div>
+
+      <!-- Phone Number -->
+      <div class="field-group">
+        <label class="field-label">Phone Number</label>
+        <div class="input-wrap">
+          <input
+            class="field-input"
+            type="tel"
+            placeholder="01xxxxxxxxx"
+            [(ngModel)]="phone"
+            name="phone"
+            autocomplete="tel"
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="input-wrap input-wrap--icon">
+          <input
+            class="field-input"
+            [type]="showPassword ? 'text' : 'password'"
+            placeholder="••••••••••••"
+            [(ngModel)]="password"
+            name="password"
+            autocomplete="new-password"
+          />
+          <button type="button" class="eye-btn" (click)="togglePassword()" tabindex="-1">
+            <!-- Eye open -->
+            <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <!-- Eye closed -->
+            <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="field-group">
+        <label class="field-label">Confirm Password</label>
+        <div class="input-wrap input-wrap--icon">
+          <input
+            class="field-input"
+            [type]="showConfirm ? 'text' : 'password'"
+            placeholder="••••••••••••"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            autocomplete="new-password"
+          />
+          <button type="button" class="eye-btn" (click)="toggleConfirm()" tabindex="-1">
+            <svg *ngIf="!showConfirm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg *ngIf="showConfirm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn" [class.loading]="isLoading" [disabled]="isLoading">
+        <span *ngIf="!isLoading">Create Account</span>
+        <span *ngIf="isLoading" class="spinner-wrap">
+          <svg class="spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          Creating…
+        </span>
+      </button>
+
+    </form>
+
+    <div class="auth-modal-footer">
+      <p class="switch-note">
+        Already have an account?
+        <button type="button" class="link-btn" (click)="goToLogin()">Log In</button>
+      </p>
+    </div>
+
+  </div>
+</div>

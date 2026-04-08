@@ -5,7 +5,7 @@
     <div class="sb-top">
       <div class="brand">
         <div class="brand-icon">
-          <img src="assets/images/dsailogo.svg" alt="DataSoft AI" class="brand-logo" />
+          <img src="assets/images/isage-logo.svg" alt="iSAGE 2.0" class="brand-logo" />
         </div>
       </div>
     </div>
@@ -51,7 +51,7 @@
           <path fill-rule="evenodd" clip-rule="evenodd" d="M55.6336 115.954C24.6993 114.712 0 89.2388 0 58C0 25.9666 25.9666 0 58 0C90.0334 0 116 25.9666 116 58C116 90.0334 90.0334 116 58 116H57.2054C56.6795 116 56.1556 115.985 55.6336 115.954ZM20.7814 94.598C20.3477 93.3527 20.2001 92.0256 20.3495 90.7154C20.4989 89.4052 20.9415 88.1455 21.6444 87.0298C22.3473 85.914 23.2924 84.9709 24.4097 84.2704C25.5269 83.5699 26.7876 83.1301 28.0981 82.9835C50.7065 80.4808 65.4327 80.707 87.9309 83.0357C89.2432 83.1724 90.507 83.6067 91.626 84.3056C92.7451 85.0045 93.6899 85.9495 94.3885 87.0687C95.0871 88.188 95.5211 89.4519 95.6574 90.7642C95.7937 92.0765 95.6288 93.4026 95.1751 94.6415C104.818 84.8859 110.218 71.717 110.2 58C110.2 29.1711 86.8289 5.8 58 5.8C29.1711 5.8 5.8 29.1711 5.8 58C5.8 72.2564 11.5159 85.1788 20.7814 94.598Z" fill="#B0B0B0"/>
         </svg>
       <div style="display: flex; flex-direction: column">
-        <h4>Sazzadul Alam</h4>
+        <h4>{{this.userData?.name?this.userData.name:''}}</h4>
         <p style="font-size: 10px;">Logged In As</p>
       </div>
 
@@ -89,7 +89,7 @@
         </span>
 
       </button>
-      <h3 style="color:white;text-align: center ">AIAN PROMPT</h3>
+      <h3 style="color:white;text-align: center ">iSAGE 2.0 PROMPT</h3>
 <!--      <button class="topbar-btn" title="Settings">-->
 <!--        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
 <!--          <circle cx="12" cy="12" r="3"/>-->
@@ -100,7 +100,7 @@
 
     <!-- WELCOME STATE -->
     <div class="welcome" *ngIf="messages.length === 0">
-      <h1 class="w-title">Hello I am AIAN</h1>
+      <h1 class="w-title">Hello I am iSAGE 2.0</h1>
       <p class="w-sub">I am here to make your life easier. Use me generate ideas, write mails, solve complex computational problem</p>
     </div>
 

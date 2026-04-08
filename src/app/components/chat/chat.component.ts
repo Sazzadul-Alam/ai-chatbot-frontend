@@ -10,6 +10,9 @@ import { ChatService, ServerProps } from '../../services/chat.service';
 import { Message, AttachedFile } from '../../models/chat.model';
 import { marked, Renderer } from 'marked';
 import { Subscription } from 'rxjs';
+import {LandingPage} from '../landing-page/landing-page';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
+import {Registration} from '../registration/registration';
 
 const escapeHtml = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -63,6 +66,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   serverProps:   ServerProps | null                  = null;
   modelAlias:    string                              = 'Loading…';
   contextSize:   number                              = 0;
+  userData: any= [];
 
   private convStore          = new Map<string, ConversationState>();
   private isBrowser          = false;
@@ -78,12 +82,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private zone:        NgZone,
     private cdr:         ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object,
+    private modalService: BsModalService,
+    public bsModalRef: BsModalRef,
+    public registrationbsModalRef:BsModalRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) this.setupMarked();
   }
 
   ngOnInit(): void {
+    const user = localStorage.getItem('user');
+    if(user!=null && user!=''){
+      this.openModal()
+    }
     this.newConversation();
     if (this.isBrowser) {
       const cached = this.chatService.getProps();
@@ -442,6 +453,25 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
     this.activeAssistantMsgId = null; this.shouldScroll = true;
     this.saveCurrentConv(); this.cdr.detectChanges();
+  }
+
+  openModal(){
+      this.bsModalRef = this.modalService.show(LandingPage, {
+        backdrop: 'static', keyboard: false,
+        class: 'modal-dialog modal-dialog-centered modal-sm'
+      });
+
+    this.bsModalRef.content.onClose.subscribe((res:any) => {
+      this.userData=res;
+      if(this.userData.type=='registration'){
+        this.registrationbsModalRef = this.modalService.show(Registration, {
+          backdrop: 'static', keyboard: false,
+          class: 'modal-dialog modal-dialog-centered modal-sm'
+        });
+      }
+      this.bsModalRef.content.onClose.complete()
+    })
+
   }
 }
 
