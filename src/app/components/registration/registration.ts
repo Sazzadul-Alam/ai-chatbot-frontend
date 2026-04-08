@@ -1,6 +1,10 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import {Router} from '@angular/router';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
+import {CheckMailVerfiy} from '../check-mail-verfiy/check-mail-verfiy';
+import {Subject} from 'rxjs';
 
 @Component({
   selector: 'app-registration',
@@ -10,8 +14,12 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './registration.css',
 })
 export class Registration {
-  @Output() switchToLogin = new EventEmitter<void>();
-  @Output() registered    = new EventEmitter<void>();
+  constructor(
+    private modalService: BsModalService,
+    private bsModalRef: BsModalRef,) {
+  }
+
+  onRegistration = new Subject<any>();
 
   userName        = '';
   email           = '';
@@ -56,20 +64,23 @@ export class Registration {
     // Simulate API call
     setTimeout(() => {
       this.isLoading = false;
-      // const userData = {
-      //   name: this.userName,
-      //   email: this.email,
-      //   phone: this.phone,
-      //   type: 'registered',
-      //   loggedInAt: new Date().toISOString(),
-      //   isGuest: false,
-      // };
+      const registrationData = {
+        name: this.userName,
+        email: this.email,
+        phone: this.phone,
+        type: 'registered',
+        loggedInAt: new Date().toISOString(),
+        isGuest: false,
+      };
       // localStorage.setItem('user', JSON.stringify(userData));
 
-    }, 1200);
+      this.onRegistration.next({data:registrationData});
+      this.bsModalRef.hide();
+
+    }, 100);
   }
 
   goToLogin(): void {
-    this.switchToLogin.emit();
+    // this.switchToLogin.emit();
   }
 }

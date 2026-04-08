@@ -13,6 +13,7 @@ import { Subscription } from 'rxjs';
 import {LandingPage} from '../landing-page/landing-page';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {Registration} from '../registration/registration';
+import {CheckMailVerfiy} from '../check-mail-verfiy/check-mail-verfiy';
 
 const escapeHtml = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -67,6 +68,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   modelAlias:    string                              = 'Loading…';
   contextSize:   number                              = 0;
   userData: any= [];
+  registrationData: any= [];
 
   private convStore          = new Map<string, ConversationState>();
   private isBrowser          = false;
@@ -84,15 +86,22 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private modalService: BsModalService,
     public bsModalRef: BsModalRef,
-    public registrationbsModalRef:BsModalRef
+    public registrationbsModalRef:BsModalRef,
+    public verifyModalRef: BsModalRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) this.setupMarked();
   }
 
   ngOnInit(): void {
-    const user = localStorage.getItem('user');
-    if(user!=null && user!=''){
+    if (isPlatformBrowser(this.platformId)) {
+      let user:any={};
+      user= localStorage.getItem('user');
+
+      if (user.length>0) {
+        this.openModal();
+      }
+    }else{
       this.openModal()
     }
     this.newConversation();
@@ -468,6 +477,14 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           backdrop: 'static', keyboard: false,
           class: 'modal-dialog modal-dialog-centered modal-sm'
         });
+        this.registrationbsModalRef.content.onRegistration.subscribe((res:any) => {
+          this.registrationData=res.data;
+          this.verifyModalRef = this.modalService.show(CheckMailVerfiy, {
+            backdrop: 'static', keyboard: false,
+            class: 'modal-dialog modal-dialog-centered modal-sm'
+          });
+          this.registrationbsModalRef.content.onRegistration.complete()
+        })
       }
       this.bsModalRef.content.onClose.complete()
     })
