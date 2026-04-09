@@ -1,10 +1,14 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import {
+  Component, Output, EventEmitter,
+  ChangeDetectorRef, OnInit
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import {Router} from '@angular/router';
-import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
-import {CheckMailVerfiy} from '../check-mail-verfiy/check-mail-verfiy';
-import {Subject} from 'rxjs';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { CheckMailVerfiy } from '../check-mail-verfiy/check-mail-verfiy';
+import { Subject } from 'rxjs';
+import { ChatService } from '../../services/chat.service';
+import { Login } from '../login/login';
 
 @Component({
   selector: 'app-registration',
@@ -13,11 +17,19 @@ import {Subject} from 'rxjs';
   templateUrl: './registration.html',
   styleUrl: './registration.css',
 })
-export class Registration {
+export class Registration implements OnInit {
+
   constructor(
     private modalService: BsModalService,
-    private bsModalRef: BsModalRef,) {
-  }
+    private bsModalRef: BsModalRef,
+    private chatService: ChatService,
+    public verifyModalRef: BsModalRef,
+    public loginModalRef: BsModalRef,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  // populated by initialState when coming back from verify screen
+  prefill?: { userName?: string; email?: string; phone?: string };
 
   onRegistration = new Subject<any>();
 
@@ -31,8 +43,16 @@ export class Registration {
   isLoading       = false;
   errorMsg        = '';
 
-  togglePassword(): void  { this.showPassword = !this.showPassword; }
-  toggleConfirm(): void   { this.showConfirm  = !this.showConfirm;  }
+  ngOnInit(): void {
+    if (this.prefill) {
+      this.userName = this.prefill.userName ?? '';
+      this.email    = this.prefill.email    ?? '';
+      this.phone    = this.prefill.phone    ?? '';
+    }
+  }
+
+  togglePassword(): void { this.showPassword = !this.showPassword; }
+  toggleConfirm(): void  { this.showConfirm  = !this.showConfirm;  }
 
   onSubmit(): void {
     this.errorMsg = '';
@@ -59,28 +79,56 @@ export class Registration {
       return;
     }
 
-    this.isLoading = true;
+    this.isLoading = true;   // ← was being immediately reset to false before, now fixed
 
-    // Simulate API call
-    setTimeout(() => {
-      this.isLoading = false;
-      const registrationData = {
-        name: this.userName,
-        email: this.email,
-        phone: this.phone,
-        type: 'registered',
-        loggedInAt: new Date().toISOString(),
-        isGuest: false,
-      };
-      // localStorage.setItem('user', JSON.stringify(userData));
+    const registrationData = {
+      name:  this.userName,
+      email: this.email,
+      phone: this.phone,
+      type:  'registered',
+      isGuest: false,
+    };
 
-      this.onRegistration.next({data:registrationData});
-      this.bsModalRef.hide();
+    const formData = new FormData();
+    formData.append('name',        this.userName);
+    formData.append('email',       this.email);
+    formData.append('phoneNumber', this.phone);
+    formData.append('password',    this.password);
 
-    }, 100);
+    this.chatService.registration(formData).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        this.verifyModalRef = this.modalService.show(CheckMailVerfiy, {
+          initialState: { res: registrationData },
+          backdrop: 'static', keyboard: false,
+          class: 'modal-dialog modal-dialog-centered modal-sm'
+        });
+        this.onRegistration.next({ data: registrationData });
+        this.bsModalRef.hide();
+      },
+      error: (err) => {
+        this.isLoading = false;
+
+        if (err.status === 409) {
+          this.errorMsg = 'This email is already registered. Please log in instead.';
+        } else if (err.status === 400) {
+          this.errorMsg = err.error?.message || 'Invalid registration details.';
+        } else if (err.status === 0) {
+          this.errorMsg = 'Cannot reach the server. Please check your connection.';
+        } else {
+          this.errorMsg = err.error?.message || 'Something went wrong. Please try again.';
+        }
+
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   goToLogin(): void {
-    // this.switchToLogin.emit();
+    this.bsModalRef.hide();
+    this.loginModalRef = this.modalService.show(Login, {
+      backdrop: 'static', keyboard: false,
+      class: 'modal-dialog modal-dialog-centered modal-sm'
+    });
   }
 }

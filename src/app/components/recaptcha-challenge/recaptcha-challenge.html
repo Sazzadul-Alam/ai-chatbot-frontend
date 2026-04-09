@@ -1,0 +1,70 @@
+<div class="ch-overlay" (click).self="close()">
+  <div class="challenge">
+
+    <div class="ch-header">
+      <div class="ch-header-left">
+        <div class="ch-logo-wrap">
+          <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+            <path d="M32 8L52 20L52 44L32 56L12 44L12 20Z" fill="none" stroke="rgba(77,163,245,0.8)" stroke-width="2"/>
+            <circle cx="32" cy="32" r="7" fill="rgba(77,163,245,0.6)"/>
+          </svg>
+        </div>
+        <div class="ch-title-block">
+          <p class="ch-title">Select all images</p>
+          <p class="ch-subtitle">reCAPTCHA verification</p>
+        </div>
+      </div>
+      <button class="ch-close" (click)="close()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="ch-instruction">
+      Select all images with a <strong>{{ challenge.target }}</strong>.
+      If there are none, click skip.
+    </div>
+
+    <div class="ch-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <div class="tile-grid">
+      <div
+        *ngFor="let tile of tiles"
+        class="tile"
+        [class.selected]="isSelected(tile)"
+        (click)="toggleTile(tile)">
+
+        <img
+          [src]="challenge.images[tile]"
+          [alt]="'Tile ' + (tile + 1)"
+          loading="lazy"
+        />
+
+        <div class="tile-overlay"></div>
+
+        <div class="tile-check" *ngIf="isSelected(tile)">
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+            <polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="ch-footer">
+      <div class="ch-footer-left">
+        <button class="refresh-btn" (click)="refresh()" title="Get new challenge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+        <span class="ch-count">{{ selectedCount }} selected</span>
+      </div>
+      <button class="verify-btn" (click)="verify()">Verify</button>
+    </div>
+
+  </div>
+</div>

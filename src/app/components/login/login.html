@@ -1,0 +1,110 @@
+<div class="auth-modal-overlay">
+  <div class="auth-modal">
+
+    <h2 class="modal-title">Log in to your account</h2>
+    <p class="modal-subtitle">Enter details to log in to your account.</p>
+
+    <!-- Error banner -->
+    <div class="error-banner" *ngIf="errorMessage">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Username -->
+    <div class="field-group">
+      <label class="field-label">User Name</label>
+      <div class="input-wrap">
+        <input
+          class="field-input"
+          type="text"
+          placeholder="Sazzadul Alam"
+          [(ngModel)]="userName"
+          name="userName"
+          autocomplete="username"
+        />
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="field-group">
+      <div class="label-row">
+        <label class="field-label">Password</label>
+        <a class="forgot-link" (click)="onForgotPassword()">Forgot Password?</a>
+      </div>
+      <div class="input-wrap input-wrap--icon">
+        <input
+          class="field-input"
+          [type]="showPassword ? 'text' : 'password'"
+          placeholder="••••••••••••"
+          [(ngModel)]="password"
+          name="password"
+          autocomplete="current-password"
+        />
+        <button type="button" class="eye-btn" (click)="showPassword = !showPassword" tabindex="-1">
+          <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- reCAPTCHA row -->
+    <div class="captcha-row" (click)="onCaptchaClick()">
+      <div class="captcha-left">
+        <div class="cap-box" [class.spinning]="captchaLoading" [class.done]="captchaVerified">
+          <svg *ngIf="captchaVerified" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="cap-label">{{ captchaVerified ? 'Verified' : "I'm not a robot" }}</span>
+      </div>
+      <div class="cap-right">
+        <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+          <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <path d="M32 14 L46 24 L46 40 L32 50 L18 40 L18 24 Z" fill="none" stroke="rgba(77,163,245,0.55)" stroke-width="1.5"/>
+          <path d="M32 20 L41 26.5 L41 37.5 L32 44 L23 37.5 L23 26.5 Z" fill="rgba(77,163,245,0.12)" stroke="rgba(77,163,245,0.35)" stroke-width="1"/>
+          <circle cx="32" cy="32" r="5" fill="rgba(77,163,245,0.45)"/>
+        </svg>
+        <span class="cap-brand">reCAPTCHA</span>
+        <span class="cap-sub">Privacy · Terms</span>
+      </div>
+    </div>
+
+    <!-- Challenge modal -->
+    <app-recaptcha-challenge
+      *ngIf="showChallenge"
+      (verified)="onCaptchaVerified()"
+      (closed)="showChallenge = false">
+    </app-recaptcha-challenge>
+
+    <!-- Login button -->
+    <button
+      class="btn-login"
+      (click)="onLogin()"
+      [disabled]="!captchaVerified || isLoading">
+      <span *ngIf="!isLoading">Log In</span>
+      <span *ngIf="isLoading" class="spinner-wrap">
+        <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+        </svg>
+        Logging in…
+      </span>
+    </button>
+
+    <p class="signup-text">
+      Don't have an account? <span (click)="onSignUp()">Sign Up</span>
+    </p>
+
+  </div>
+</div>

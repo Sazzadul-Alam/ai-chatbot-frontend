@@ -1,8 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {NgIf} from '@angular/common';
 import {Router} from '@angular/router';
-import {BsModalRef} from 'ngx-bootstrap/modal';
+import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {Subject} from 'rxjs';
+import {Login} from '../login/login';
 
 @Component({
   selector: 'app-landing-page',
@@ -13,7 +14,10 @@ export class LandingPage implements OnInit{
   private isBrowser= false;
   showModal: boolean=true;
   onClose = new Subject<any>();
-  constructor(private router: Router,public bsModalRef: BsModalRef) {
+  constructor(private router: Router
+              ,private modalService: BsModalService
+              ,public bsModalRef: BsModalRef
+              ,public loginModalRef: BsModalRef) {
   }
 
   ngOnInit(): void {
@@ -50,7 +54,11 @@ export class LandingPage implements OnInit{
   }
 
   onSignIn() {
-
+    this.bsModalRef.hide();
+    this.loginModalRef = this.modalService.show(Login, {
+      backdrop: 'static', keyboard: false,
+      class: 'modal-dialog modal-dialog-centered modal-sm'
+    });
   }
 
 }

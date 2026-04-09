@@ -86,8 +86,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private modalService: BsModalService,
     public bsModalRef: BsModalRef,
-    public registrationbsModalRef:BsModalRef,
-    public verifyModalRef: BsModalRef
+    public registrationbsModalRef:BsModalRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) this.setupMarked();
@@ -97,6 +96,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (isPlatformBrowser(this.platformId)) {
       let user:any={};
       user= localStorage.getItem('user');
+      this.userData=user;
 
       if (user.length>0) {
         this.openModal();
@@ -479,10 +479,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         });
         this.registrationbsModalRef.content.onRegistration.subscribe((res:any) => {
           this.registrationData=res.data;
-          this.verifyModalRef = this.modalService.show(CheckMailVerfiy, {
-            backdrop: 'static', keyboard: false,
-            class: 'modal-dialog modal-dialog-centered modal-sm'
-          });
+
           this.registrationbsModalRef.content.onRegistration.complete()
         })
       }

@@ -1,4 +1,29 @@
-<div class="auth-modal-overlay shell">
+<div class="auth-modal-overlay">
   <div class="auth-modal">
+
+    <h2 class="title">Check your email</h2>
+
+    <p class="subtitle">
+      Please enter the four digit verification code we sent to <br>
+      <span class="email">{{ res?.email }}</span>  <!-- ← added ?. safe navigation -->
+    </p>
+
+    <div class="otp-container">
+      <input #otpInput type="text" maxlength="1" (input)="onInput($event, 0)" (keydown)="onKeyDown($event, 0)" />
+      <input #otpInput type="text" maxlength="1" (input)="onInput($event, 1)" (keydown)="onKeyDown($event, 1)" />
+      <input #otpInput type="text" maxlength="1" (input)="onInput($event, 2)" (keydown)="onKeyDown($event, 2)" />
+      <input #otpInput type="text" maxlength="1" (input)="onInput($event, 3)" (keydown)="onKeyDown($event, 3)" />
+    </div>
+
+    <button class="confirm-btn" (click)="activateAcc()">Confirm</button>
+
+    <p class="resend">
+      Didn't get the email?
+      <span *ngIf="timeLeft > 0">Resend in {{ this.displayTime }}</span>
+      <span *ngIf="timeLeft === 0" class="resend-link" (click)="resendCode()">Resend now</span>
+    </p>
+
+    <div class="back" (click)="back()">← back</div>
+
   </div>
 </div>

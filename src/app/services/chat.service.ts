@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { timeout, tap } from 'rxjs/operators';
+import {environment} from '../../environments/environment';
 
 const STORAGE_KEY = 'llama_server_props';
 const API_HEADERS: Record<string, string> = {
@@ -21,7 +22,6 @@ export interface ServerProps {
 
 @Injectable({ providedIn: 'root' })
 export class ChatService {
-  private apiUrl = 'http://192.168.14.74:8080';
   private props: ServerProps | null = null;
 
   constructor(
@@ -39,7 +39,7 @@ export class ChatService {
   }
 
   fetchAndCacheProps(): Observable<ServerProps> {
-    return this.http.get<ServerProps>(`${this.apiUrl}/props`, { headers: API_HEADERS }).pipe(
+    return this.http.get<ServerProps>(`${environment.apiUrl}/props`, { headers: API_HEADERS }).pipe(
       tap(props => {
         this.props = props;
         try {
@@ -166,7 +166,7 @@ export class ChatService {
         }
       };
 
-      fetch(`${this.apiUrl}/v1/chat/completions`, {
+      fetch(`${environment.apiUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -252,6 +252,23 @@ export class ChatService {
   }
 
   checkHealth(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/health`, { headers: API_HEADERS }).pipe(timeout(5000));
+    return this.http.get(`${environment.apiUrl}/health`, { headers: API_HEADERS }).pipe(timeout(5000));
+  }
+
+  registration(obj: any): Observable<any> {
+    return this.http.post(`${environment.backend}/user/register`, obj, {
+      responseType: 'text'
+    });
+  }
+  activate(obj:any):Observable<any>{
+    return this.http.post(`${environment.backend}/user/activate`, obj, {
+      responseType: 'text'
+    });
+  }
+
+  login(obj:any):Observable<any> {
+    return this.http.post(`${environment.backend}/authenticate`, obj, {
+      responseType: 'text'
+    });
   }
 }
