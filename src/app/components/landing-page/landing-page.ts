@@ -11,22 +11,14 @@ import {Login} from '../login/login';
   styleUrl: './landing-page.css',
 })
 export class LandingPage implements OnInit{
-  private isBrowser= false;
   showModal: boolean=true;
   onClose = new Subject<any>();
-  constructor(private router: Router
-              ,private modalService: BsModalService
+  constructor(private modalService: BsModalService
               ,public bsModalRef: BsModalRef
               ,public loginModalRef: BsModalRef) {
   }
 
   ngOnInit(): void {
-
-    const user = localStorage.getItem('user');
-    if(user!=null && user!=''){
-      this.showModal = false;
-      // this.onGuest()
-    }
   }
 
   onGuest() {

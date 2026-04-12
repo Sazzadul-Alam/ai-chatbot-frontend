@@ -166,6 +166,24 @@ export class ChatService {
         }
       };
 
+      const dataForSave = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+          ...API_HEADERS,
+        },
+        body: JSON.stringify(this.buildPayload(messages)),
+        signal: ctrl.signal
+      };
+
+      this.saveRequest(dataForSave).subscribe({
+        next: (res:any) => console.log('Request saved:', res),
+        error: (err:any) => console.error('Failed to save request:', err)
+      });
+
       fetch(`${environment.apiUrl}/v1/chat/completions`, {
         method: 'POST',
         headers: {
@@ -250,7 +268,16 @@ export class ChatService {
       };
     });
   }
+  saveRequest(obj: any): Observable<any> {
+    const accessToken = localStorage.getItem('accessToken');
 
+    return this.http.post(`${environment.backend}/isage/save-request`, obj, {
+      responseType: 'text',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+  }
   checkHealth(): Observable<any> {
     return this.http.get(`${environment.apiUrl}/health`, { headers: API_HEADERS }).pipe(timeout(5000));
   }
@@ -271,4 +298,26 @@ export class ChatService {
       responseType: 'text'
     });
   }
+  getCountryCode(): Observable<any> {
+
+    return this.http.get(`${environment.backend}/isage/country-code`);
+  }
+
+  saveConv(convStore: any): Observable<any> {
+    const accessToken = localStorage.getItem('accessToken');
+
+    return this.http.post(`${environment.backend}/isage/save-conv`, convStore, {
+      responseType: 'text',
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+  }
+  getConv(): Observable<any> {
+    const accessToken = localStorage.getItem('accessToken');
+    return this.http.get(`${environment.backend}/isage/get-conv`, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+  }
+
 }

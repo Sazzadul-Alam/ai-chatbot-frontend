@@ -23,7 +23,7 @@
           <input
             class="field-input"
             type="text"
-            placeholder="Sazzadul Alam"
+            placeholder="Write Your name"
             [(ngModel)]="userName"
             name="userName"
             autocomplete="name"
@@ -38,7 +38,7 @@
           <input
             class="field-input"
             type="email"
-            placeholder="sazzadul@gmail.com"
+            placeholder="Write Your Email"
             [(ngModel)]="email"
             name="email"
             autocomplete="email"
@@ -49,9 +49,18 @@
       <!-- Phone Number -->
       <div class="field-group">
         <label class="field-label">Phone Number</label>
-        <div class="input-wrap">
+        <div class="input-wrap phone-wrap">
+          <select
+            class="country-select"
+            [(ngModel)]="countryCode"
+            name="countryCode"
+          >
+            <option *ngFor="let c of countryCodes" [value]="c.countryCode">
+              {{ c.isoCodes }} (+{{ c.countryCode }})
+            </option>
+          </select>
           <input
-            class="field-input"
+            class="field-input phone-input"
             type="tel"
             placeholder="01xxxxxxxxx"
             [(ngModel)]="phone"
@@ -68,7 +77,7 @@
           <input
             class="field-input"
             [type]="showPassword ? 'text' : 'password'"
-            placeholder="••••••••••••"
+            placeholder="xxxxxxxxx"
             [(ngModel)]="password"
             name="password"
             autocomplete="new-password"
@@ -96,7 +105,7 @@
           <input
             class="field-input"
             [type]="showConfirm ? 'text' : 'password'"
-            placeholder="••••••••••••"
+            placeholder="xxxxxxxxx"
             [(ngModel)]="confirmPassword"
             name="confirmPassword"
             autocomplete="new-password"

@@ -5,6 +5,7 @@ import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { ChatService } from '../../services/chat.service';
 import { Registration } from '../registration/registration';
 import { RecaptchaChallengeComponent } from '../recaptcha-challenge/recaptcha-challenge';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -30,6 +31,7 @@ export class Login {
     private modalService: BsModalService,
     private bsModalRef: BsModalRef,
     private registrationModalRef: BsModalRef,
+    private router: Router,
   ) {}
 
   onCaptchaClick(): void {
@@ -70,7 +72,8 @@ export class Login {
         const data = JSON.parse(res);
 
         const user={
-          name:this.userName,
+          name:data.FullName,
+          email:this.userName,
           accessToken:data.AccessToken,
           refreshToken:data.RefreshToken,
         };
@@ -80,6 +83,7 @@ export class Login {
         this.isLoading = false;
         console.log('Login success:', res);
         this.bsModalRef.hide();
+        window.location.reload();
       },
       error: (err) => {
         this.isLoading = false;
@@ -103,5 +107,16 @@ export class Login {
     this.registrationModalRef.content.onRegistration.subscribe((res: any) => {
       console.log('Registered:', res);
     });
+  }
+  asGuest(): void {
+    const guestData = {
+      name: 'Guest User',
+      type: 'guest',
+      loggedInAt: new Date().toISOString(),
+      isGuest: true,
+      sessionId: 'guest_' + Date.now()
+    };
+    localStorage.setItem('user', JSON.stringify(guestData));
+    window.location.reload();
   }
 }

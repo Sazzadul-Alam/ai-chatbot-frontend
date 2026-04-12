@@ -16,12 +16,12 @@
 
     <!-- Username -->
     <div class="field-group">
-      <label class="field-label">User Name</label>
+      <label class="field-label">Email</label>
       <div class="input-wrap">
         <input
           class="field-input"
           type="text"
-          placeholder="Sazzadul Alam"
+          placeholder="Write Your Email"
           [(ngModel)]="userName"
           name="userName"
           autocomplete="username"
@@ -39,7 +39,7 @@
         <input
           class="field-input"
           [type]="showPassword ? 'text' : 'password'"
-          placeholder="••••••••••••"
+          placeholder="Write Your Password"
           [(ngModel)]="password"
           name="password"
           autocomplete="current-password"
@@ -104,6 +104,9 @@
 
     <p class="signup-text">
       Don't have an account? <span (click)="onSignUp()">Sign Up</span>
+    </p>
+    <p class="signup-text">
+      OR <span (click)="asGuest()">Login As Guest</span>
     </p>
 
   </div>

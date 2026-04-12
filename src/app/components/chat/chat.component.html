@@ -1,5 +1,11 @@
 <div class="shell" [class.sidebar-hidden]="!sidebarOpen">
 
+  <!-- Backdrop (mobile only) -->
+  <div class="sidebar-backdrop"
+       *ngIf="sidebarOpen"
+       (click)="sidebarOpen = false">
+  </div>
+
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <div class="sb-top">
@@ -35,38 +41,24 @@
       </div>
     </div>
 
-    <!-- Model info from /props -->
-<!--    <div class="model-info" *ngIf="serverProps">-->
-<!--      <span class="model-icon">🤖</span>-->
-<!--      <div class="model-details">-->
-<!--        <span class="model-name" [title]="serverProps.model_path">{{ modelAlias }}</span>-->
-<!--        <span class="model-ctx">ctx {{ contextSize | number }}</span>-->
-<!--      </div>-->
-<!--    </div>-->
-
-    <div class="sb-footer">
-<!--      <div class="status-info">-->
+    <div class="row">
+      <div class="d-inline-flex col-10">
         <svg width="32" height="28" viewBox="0 0 116 116" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M81.2008 46.4031C81.2008 52.5561 78.7565 58.4572 74.4057 62.808C70.0548 67.1588 64.1538 69.6031 58.0008 69.6031C51.8478 69.6031 45.9467 67.1588 41.5959 62.808C37.2451 58.4572 34.8008 52.5561 34.8008 46.4031C34.8008 40.2501 37.2451 34.3491 41.5959 29.9982C45.9467 25.6474 51.8478 23.2031 58.0008 23.2031C64.1538 23.2031 70.0548 25.6474 74.4057 29.9982C78.7565 34.3491 81.2008 40.2501 81.2008 46.4031Z" fill="#B0B0B0"/>
           <path fill-rule="evenodd" clip-rule="evenodd" d="M55.6336 115.954C24.6993 114.712 0 89.2388 0 58C0 25.9666 25.9666 0 58 0C90.0334 0 116 25.9666 116 58C116 90.0334 90.0334 116 58 116H57.2054C56.6795 116 56.1556 115.985 55.6336 115.954ZM20.7814 94.598C20.3477 93.3527 20.2001 92.0256 20.3495 90.7154C20.4989 89.4052 20.9415 88.1455 21.6444 87.0298C22.3473 85.914 23.2924 84.9709 24.4097 84.2704C25.5269 83.5699 26.7876 83.1301 28.0981 82.9835C50.7065 80.4808 65.4327 80.707 87.9309 83.0357C89.2432 83.1724 90.507 83.6067 91.626 84.3056C92.7451 85.0045 93.6899 85.9495 94.3885 87.0687C95.0871 88.188 95.5211 89.4519 95.6574 90.7642C95.7937 92.0765 95.6288 93.4026 95.1751 94.6415C104.818 84.8859 110.218 71.717 110.2 58C110.2 29.1711 86.8289 5.8 58 5.8C29.1711 5.8 5.8 29.1711 5.8 58C5.8 72.2564 11.5159 85.1788 20.7814 94.598Z" fill="#B0B0B0"/>
         </svg>
-      <div style="display: flex; flex-direction: column">
-        <h4>{{this.userData?.name?this.userData.name:''}}</h4>
-        <p style="font-size: 10px;">Logged In As</p>
+        <div style="display: flex; flex-direction: column">
+          <h6 style="max-width: 14ch; word-wrap: break-word; overflow-wrap: break-word;" class="text-truncate">
+            {{userData?.name ? userData.name : ''}}
+          </h6>
+          <p style="font-size: 10px;">Logged In As</p>
+        </div>
       </div>
-
-        <!--        <span class="s-dot" [class.on]="serverOnline" [class.off]="!serverOnline"></span>-->
-<!--        <div class="status-text">-->
-<!--          <span class="s-label">{{ serverOnline ? 'Connected' : 'Offline' }}</span>-->
-<!--          <span class="s-sub">Backend Status</span>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--      <button class="s-refresh" (click)="refreshProps()" [class.spinning]="isLoading" title="Refresh">-->
-<!--        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
-<!--          <polyline points="23 4 23 10 17 10"/>-->
-<!--          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>-->
-<!--        </svg>-->
-<!--      </button>-->
+      <div class="col-2" (click)="logout()">
+        <svg width="22" height="22" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18.4167 7.58333L16.8892 9.11083L19.6842 11.9167H8.66675V14.0833H19.6842L16.8892 16.8783L18.4167 18.4167L23.8334 13L18.4167 7.58333ZM4.33341 5.41667H13.0001V3.25H4.33341C3.14175 3.25 2.16675 4.225 2.16675 5.41667V20.5833C2.16675 21.775 3.14175 22.75 4.33341 22.75H13.0001V20.5833H4.33341V5.41667Z" fill="white"/>
+        </svg>
+      </div>
     </div>
   </nav>
 
@@ -77,31 +69,23 @@
     <div class="topbar">
       <button class="topbar-btn" (click)="sidebarOpen = !sidebarOpen" title="Toggle sidebar">
         <span *ngIf="sidebarOpen">
-          <svg  width="38" height="10" viewBox="0 0 50 33" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0H27.7778V5.5H0V0ZM0 27.5H27.7778V33H0V27.5ZM0 13.75H33.3333V19.25H0V13.75ZM36.1111 2.75L32.1667 6.5725L42.0556 16.5L32.1667 26.4275L36.1111 30.25L50 16.5L36.1111 2.75Z" fill="white"/>
-        </svg>
+          <svg width="28" height="10" viewBox="0 0 50 33" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0H27.7778V5.5H0V0ZM0 27.5H27.7778V33H0V27.5ZM0 13.75H33.3333V19.25H0V13.75ZM36.1111 2.75L32.1667 6.5725L42.0556 16.5L32.1667 26.4275L36.1111 30.25L50 16.5L36.1111 2.75Z" fill="white"/>
+          </svg>
         </span>
-
         <span *ngIf="!sidebarOpen">
-          <svg  width="38" height="10" viewBox="0 0 50 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 33.3333V27.7778H36.1111V33.3333H0ZM46.1111 30.5556L32.2222 16.6667L46.1111 2.77778L50 6.66667L40 16.6667L50 26.6667L46.1111 30.5556ZM0 19.4444V13.8889H27.7778V19.4444H0ZM0 5.55556V0H36.1111V5.55556H0Z" fill="#898989"/>
-        </svg>
+          <svg width="28" height="10" viewBox="0 0 50 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 33.3333V27.7778H36.1111V33.3333H0ZM46.1111 30.5556L32.2222 16.6667L46.1111 2.77778L50 6.66667L40 16.6667L50 26.6667L46.1111 30.5556ZM0 19.4444V13.8889H27.7778V19.4444H0ZM0 5.55556V0H36.1111V5.55556H0Z" fill="#898989"/>
+          </svg>
         </span>
-
       </button>
-      <h3 style="color:white;text-align: center ">iSAGE 2.0 PROMPT</h3>
-<!--      <button class="topbar-btn" title="Settings">-->
-<!--        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">-->
-<!--          <circle cx="12" cy="12" r="3"/>-->
-<!--          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>-->
-<!--        </svg>-->
-<!--      </button>-->
+      <h3>iSAGE 2.0 PROMPT</h3>
     </div>
 
     <!-- WELCOME STATE -->
     <div class="welcome" *ngIf="messages.length === 0">
       <h1 class="w-title">Hello I am iSAGE 2.0</h1>
-      <p class="w-sub">I am here to make your life easier. Use me generate ideas, write mails, solve complex computational problem</p>
+      <p class="w-sub">I am here to make your life easier. Use me to generate ideas, write mails, solve complex computational problems</p>
     </div>
 
     <!-- MESSAGES -->
@@ -121,18 +105,14 @@
         </div>
       </div>
 
-      <!-- Replace your existing *ngFor message loop with this -->
-
       <div class="msgs-inner">
         <ng-container *ngFor="let msg of messages">
 
-          <!-- ── USER bubble — rendered from userPrompts ── -->
+          <!-- USER bubble -->
           <ng-container *ngIf="msg.role === 'user'">
             <ng-container *ngIf="getUserPrompt(msg.id) as prompt">
               <div class="msg msg-user">
                 <div class="msg-body">
-
-                  <!-- File attachments -->
                   <div class="attachments" *ngIf="prompt.files && prompt.files.length > 0">
                     <div class="att" *ngFor="let f of prompt.files">
                       <img *ngIf="f.url" [src]="f.url" class="att-img" [alt]="f.name"/>
@@ -145,11 +125,7 @@
                       </div>
                     </div>
                   </div>
-
-                  <!-- Prompt text bubble -->
                   <div class="user-bubble">{{ prompt.text }}</div>
-
-                  <!-- Timestamp -->
                   <div class="user-meta">
                     <span class="msg-time">{{ formatTime(prompt.timestamp) }}</span>
                     <button
@@ -157,7 +133,6 @@
                       class="edit-prompt-btn"
                       type="button"
                       title="Edit prompt"
-                      aria-label="Edit prompt"
                       (click)="editUserPrompt(prompt)">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 20h9"/>
@@ -165,48 +140,38 @@
                       </svg>
                     </button>
                   </div>
-
                 </div>
               </div>
             </ng-container>
           </ng-container>
 
-          <!-- ── AI message — unchanged ── -->
+          <!-- AI message -->
           <div class="msg msg-ai" *ngIf="msg.role === 'assistant'">
             <div class="av">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
                 <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7H3a7 7 0 0 1 7-7h1V5.73A2 2 0 1 1 12 2zM5 14v3a7 7 0 0 0 14 0v-3"/>
               </svg>
             </div>
-
             <div class="msg-body">
-              <!-- Thinking dots -->
               <div class="thinking" *ngIf="isLoading && !msg.content">
                 <span class="t-dot"></span>
                 <span class="t-dot"></span>
                 <span class="t-dot"></span>
               </div>
-
-              <!-- Streaming badge -->
               <div class="stream-badge" *ngIf="isLoading && msg.content">
                 <span class="stream-pulse"></span>
                 <span class="stream-label">Generating…</span>
               </div>
-
-              <!-- AI response -->
               <div class="answer-sections" *ngIf="msg.renderedReasoningHtml || msg.renderedFinalHtml">
                 <div class="answer-section reasoning-section" *ngIf="msg.renderedReasoningHtml">
                   <span class="answer-label">Reasoning</span>
                   <div class="msg-text markdown-body" [innerHTML]="msg.renderedReasoningHtml"></div>
                 </div>
-
                 <div class="answer-section final-section" *ngIf="msg.renderedFinalHtml">
                   <span class="answer-label">Final Answer</span>
                   <div class="msg-text markdown-body" [innerHTML]="msg.renderedFinalHtml"></div>
                 </div>
               </div>
-
-              <!-- Footer -->
               <div class="msg-footer" *ngIf="!isLoading && msg.content">
                 <button class="copy-btn" (click)="copyMessage(msg.id, msg.content)">
                   {{ copiedId === msg.id ? '✓ Copied' : '⎘ Copy' }}
@@ -217,13 +182,12 @@
           </div>
 
         </ng-container>
-
         <div #messagesEnd></div>
       </div>
     </div>
 
     <!-- INPUT AREA -->
-    <div class="input-wrap">
+    <div class="input-area">
       <div class="input-zone"
            (dragover)="onDragOver($event)"
            (dragleave)="onDragLeave()"
@@ -268,7 +232,6 @@
                    (change)="onFileSelect($event)"
                    accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.json,.zip"/>
           </div>
-
           <div class="tl-right">
             <button class="send-btn"
                     [class.ready]="canSend || isLoading"
@@ -280,8 +243,8 @@
                 <polyline points="5 12 12 5 19 12"/>
               </svg>
               <svg *ngIf="isLoading" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                <rect x="6" y="5" width="4" height="14" rx="1"></rect>
-                <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+                <rect x="6" y="5" width="4" height="14" rx="1"/>
+                <rect x="14" y="5" width="4" height="14" rx="1"/>
               </svg>
             </button>
           </div>

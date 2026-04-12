@@ -14,6 +14,7 @@ import {LandingPage} from '../landing-page/landing-page';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {Registration} from '../registration/registration';
 import {CheckMailVerfiy} from '../check-mail-verfiy/check-mail-verfiy';
+import {Router} from '@angular/router';
 
 const escapeHtml = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -86,6 +87,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object,
     private modalService: BsModalService,
     public bsModalRef: BsModalRef,
+    private router: Router,
     public registrationbsModalRef:BsModalRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -94,17 +96,20 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      let user:any={};
-      user= localStorage.getItem('user');
-      this.userData=user;
-
-      if (user.length>0) {
+      let user: any;
+      user = localStorage.getItem('user');
+      this.userData = JSON.parse(user);
+      if (!this.userData?.name) {
         this.openModal();
+        this.newConversation(); // ← only create new conv if not logged in
+      } else {
+        this.loadUserConversations(); // ← this will handle conversation setup
       }
-    }else{
-      this.openModal()
+    } else {
+      this.openModal();
+      this.newConversation();
     }
-    this.newConversation();
+
     if (this.isBrowser) {
       const cached = this.chatService.getProps();
       if (cached) this.applyProps(cached);
@@ -116,7 +121,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }, 0);
     }
   }
-
   ngOnDestroy(): void { this.streamSub?.unsubscribe(); }
 
   private applyProps(props: ServerProps): void {
@@ -265,11 +269,35 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   // Conversation management
   private saveCurrentConv(): void {
     if (!this.currentConvId) return;
+
     this.convStore.set(this.currentConvId, {
-      messages: [...this.messages], chatHistory: [...this.chatHistory], userPrompts: [...this.userPrompts],
+      messages: [...this.messages],
+      chatHistory: [...this.chatHistory],
+      userPrompts: [...this.userPrompts],
+    });
+
+    const convObject = Object.fromEntries(this.convStore);
+
+    // strip SafeHtml fields before saving
+    const cleanConvObject: any = {};
+    Object.entries(convObject).forEach(([id, state]) => {
+      cleanConvObject[id] = {
+        chatHistory: state.chatHistory,
+        userPrompts: state.userPrompts,
+        messages: state.messages.map(({
+                                        renderedFinalHtml,
+                                        renderedReasoningHtml,
+                                        ...rest
+                                      }) => rest),
+      };
+    });
+
+    // ✅ send cleanConvObject directly, not wrapped in { data: ... }
+    this.chatService.saveConv(cleanConvObject).subscribe({
+      next: (res) => console.log('Conversation saved:', res),
+      error: (err) => console.error('Failed to save conversation:', err)
     });
   }
-
   private loadConv(id: string): void {
     const s = this.convStore.get(id);
     if (s) { this.messages = [...s.messages]; this.chatHistory = [...s.chatHistory]; this.userPrompts = [...s.userPrompts]; }
@@ -486,6 +514,71 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.bsModalRef.content.onClose.complete()
     })
 
+  }
+  logout(){
+    localStorage.clear()
+    window.location.reload();
+  }
+
+
+  private loadUserConversations(): void {
+    this.chatService.getConv().subscribe({
+      next: (res: any) => {
+        // ✅ res.data is the convObject directly now
+        const data: Record<string, ConversationState> = res?.data;
+
+        if (!data || Object.keys(data).length === 0) {
+          this.newConversation();
+          return;
+        }
+
+        // restore convStore + re-render HTML for each message
+        Object.entries(data).forEach(([id, state]) => {
+          const messages = (state.messages ?? []).map(msg => {
+            const rich: RichMessage = { ...msg };
+            if (rich.content) this.updateMessageHtml(rich);
+            return rich;
+          });
+
+          this.convStore.set(id, {
+            messages,
+            chatHistory: state.chatHistory ?? [],
+            userPrompts: (state.userPrompts ?? []).map(p => ({
+              ...p,
+              timestamp: new Date(p.timestamp),
+            })),
+          });
+        });
+
+        // restore sidebar list — sort by id descending (newest first)
+        this.conversations = Object.entries(data)
+          .sort(([a], [b]) => Number(b) - Number(a))
+          .map(([id, state]) => ({
+            id,
+            title: (state.messages ?? []).find(m => m.role === 'user')
+              ?.content?.slice(0, 40) ?? 'Conversation',
+          }));
+
+        // set currentConvId and load latest
+        const latestId = this.conversations[0].id;
+        this.currentConvId = latestId;
+
+        const latest = this.convStore.get(latestId);
+        if (latest) {
+          this.messages    = [...latest.messages];
+          this.chatHistory = [...latest.chatHistory];
+          this.userPrompts = [...latest.userPrompts];
+        }
+
+        this.shouldScroll = true;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Failed to load conversations:', err);
+        this.newConversation();
+      }
+    });
   }
 }
 

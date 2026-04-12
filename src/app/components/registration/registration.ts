@@ -18,6 +18,7 @@ import { Login } from '../login/login';
   styleUrl: './registration.css',
 })
 export class Registration implements OnInit {
+  countryCodes: any[]=[];
 
   constructor(
     private modalService: BsModalService,
@@ -42,8 +43,10 @@ export class Registration implements OnInit {
   showConfirm     = false;
   isLoading       = false;
   errorMsg        = '';
+  countryCode: any;
 
   ngOnInit(): void {
+    this.loadCountryCodes();
     if (this.prefill) {
       this.userName = this.prefill.userName ?? '';
       this.email    = this.prefill.email    ?? '';
@@ -131,4 +134,19 @@ export class Registration implements OnInit {
       class: 'modal-dialog modal-dialog-centered modal-sm'
     });
   }
+  loadCountryCodes(): void {
+    this.chatService.getCountryCode().subscribe({
+      next: (res: any) => {
+        this.countryCodes = res;
+        // set default to Bangladesh
+        const bd = this.countryCodes.find(c => c.countryCode === '880');
+        this.countryCode = bd ? bd.countryCode : this.countryCodes[0]?.countryCode;
+        this.cdr.markForCheck(); // ← fixes NG0100
+      },
+      error: (err) => {
+        console.error('Failed to load country codes:', err);
+      }
+    });
+  }
+
 }
