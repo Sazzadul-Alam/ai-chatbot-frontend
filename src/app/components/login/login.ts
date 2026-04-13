@@ -6,6 +6,7 @@ import { ChatService } from '../../services/chat.service';
 import { Registration } from '../registration/registration';
 import { RecaptchaChallengeComponent } from '../recaptcha-challenge/recaptcha-challenge';
 import {Router} from '@angular/router';
+import {ToastService} from '../../shared/toast';
 
 @Component({
   selector: 'app-login',
@@ -26,6 +27,7 @@ export class Login {
 
   private chatService = inject(ChatService);
   private cdr = inject(ChangeDetectorRef);
+  private toastr = inject(ToastService);
 
   constructor(
     private modalService: BsModalService,
@@ -71,23 +73,25 @@ export class Login {
       next: (res) => {
         const data = JSON.parse(res);
 
-        const user={
-          name:data.FullName,
-          email:this.userName,
-          accessToken:data.AccessToken,
-          refreshToken:data.RefreshToken,
+        const user = {
+          name:         data.FullName,
+          email:        this.userName,
+          accessToken:  data.AccessToken,
+          refreshToken: data.RefreshToken,
         };
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('accessToken', data.AccessToken);
+        localStorage.setItem('user',         JSON.stringify(user));
+        localStorage.setItem('type',         'Active User');
+        localStorage.setItem('accessToken',  data.AccessToken);
         localStorage.setItem('refreshToken', data.RefreshToken);
+
         this.isLoading = false;
-        console.log('Login success:', res);
         this.bsModalRef.hide();
         window.location.reload();
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = 'Invalid username or password.';
+        this.cdr.markForCheck();
+        this.toastr.error('Invalid username or password.', 'Login Failed');  // ← toast
         console.error('Login error:', err);
       }
     });

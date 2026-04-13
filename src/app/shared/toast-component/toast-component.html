@@ -1,0 +1,28 @@
+<div class="toast-wrapper" [class.toast-hide]="hiding">
+  <div class="toast-box" [class.toast-success]="type === 'success'" [class.toast-error]="type === 'error'">
+
+    <!-- Icon -->
+    <div class="toast-icon">
+      <svg *ngIf="type === 'success'" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+      <svg *ngIf="type === 'error'" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+
+    <!-- Text -->
+    <div class="toast-body">
+      <p class="toast-title">{{ title }}</p>
+      <p class="toast-message">{{ message }}</p>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="toast-progress" [style.animation-duration.ms]="duration"></div>
+
+  </div>
+</div>

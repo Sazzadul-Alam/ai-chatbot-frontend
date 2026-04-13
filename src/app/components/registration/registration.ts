@@ -1,6 +1,7 @@
 import {
-  Component, Output, EventEmitter,
-  ChangeDetectorRef, OnInit
+  Component,
+  ChangeDetectorRef, OnInit, HostListener,
+  ElementRef, ViewChild
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +19,11 @@ import { Login } from '../login/login';
   styleUrl: './registration.css',
 })
 export class Registration implements OnInit {
-  countryCodes: any[]=[];
+
+  @ViewChild('flagTrigger') flagTriggerRef!: ElementRef;
+
+  countryCodes:      any[] = [];
+  filteredCountries: any[] = [];
 
   constructor(
     private modalService: BsModalService,
@@ -29,7 +34,6 @@ export class Registration implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  // populated by initialState when coming back from verify screen
   prefill?: { userName?: string; email?: string; phone?: string };
 
   onRegistration = new Subject<any>();
@@ -43,7 +47,12 @@ export class Registration implements OnInit {
   showConfirm     = false;
   isLoading       = false;
   errorMsg        = '';
-  countryCode: any;
+  countryCode:    any;
+
+  // ── Flag dropdown state ───────────────────────────────────────────────────
+  dropdownOpen  = false;
+  searchTerm    = '';
+  selectedFlag  = '🌐';
 
   ngOnInit(): void {
     this.loadCountryCodes();
@@ -53,6 +62,51 @@ export class Registration implements OnInit {
       this.phone    = this.prefill.phone    ?? '';
     }
   }
+
+  // ── Flag helpers ──────────────────────────────────────────────────────────
+
+  /** Convert 2-letter ISO code → flag emoji  e.g. 'BD' → 🇧🇩 */
+  getFlag(isoCode: string): string {
+    if (!isoCode || isoCode.length < 2) return '🌐';
+    const code = isoCode.trim().toUpperCase().slice(0, 2);
+    return Array.from(code)
+      .map(ch => String.fromCodePoint(0x1F1E6 - 65 + ch.charCodeAt(0)))
+      .join('');
+  }
+
+  toggleDropdown(): void {
+    this.dropdownOpen = !this.dropdownOpen;
+    if (this.dropdownOpen) {
+      this.searchTerm        = '';
+      this.filteredCountries = [...this.countryCodes];
+    }
+  }
+
+  onSearch(): void {
+    const term = this.searchTerm.toLowerCase();
+    this.filteredCountries = this.countryCodes.filter(c =>
+      c.isoCodes.toLowerCase().includes(term) ||
+      String(c.countryCode).includes(term)
+    );
+  }
+
+  selectCountry(c: any): void {
+    this.countryCode  = c.countryCode;
+    this.selectedFlag = this.getFlag(c.isoCodes);
+    this.dropdownOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  /** Close dropdown when clicking anywhere outside the trigger */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent): void {
+    if (this.flagTriggerRef &&
+      !this.flagTriggerRef.nativeElement.contains(e.target)) {
+      this.dropdownOpen = false;
+    }
+  }
+
+  // ── Form ──────────────────────────────────────────────────────────────────
 
   togglePassword(): void { this.showPassword = !this.showPassword; }
   toggleConfirm(): void  { this.showConfirm  = !this.showConfirm;  }
@@ -82,13 +136,13 @@ export class Registration implements OnInit {
       return;
     }
 
-    this.isLoading = true;   // ← was being immediately reset to false before, now fixed
+    this.isLoading = true;
 
     const registrationData = {
-      name:  this.userName,
-      email: this.email,
-      phone: this.phone,
-      type:  'registered',
+      name:    this.userName,
+      email:   this.email,
+      phone:   this.phone,
+      type:    'registered',
       isGuest: false,
     };
 
@@ -111,7 +165,6 @@ export class Registration implements OnInit {
       },
       error: (err) => {
         this.isLoading = false;
-
         if (err.status === 409) {
           this.errorMsg = 'This email is already registered. Please log in instead.';
         } else if (err.status === 400) {
@@ -121,7 +174,6 @@ export class Registration implements OnInit {
         } else {
           this.errorMsg = err.error?.message || 'Something went wrong. Please try again.';
         }
-
         this.cdr.markForCheck();
       }
     });
@@ -134,19 +186,23 @@ export class Registration implements OnInit {
       class: 'modal-dialog modal-dialog-centered modal-sm'
     });
   }
+
   loadCountryCodes(): void {
     this.chatService.getCountryCode().subscribe({
       next: (res: any) => {
-        this.countryCodes = res;
-        // set default to Bangladesh
-        const bd = this.countryCodes.find(c => c.countryCode === '880');
-        this.countryCode = bd ? bd.countryCode : this.countryCodes[0]?.countryCode;
-        this.cdr.markForCheck(); // ← fixes NG0100
+        this.countryCodes      = res;
+        this.filteredCountries = [...res];
+
+        // Default to Bangladesh
+        const bd  = this.countryCodes.find(c => c.countryCode === '880');
+        const def = bd ?? this.countryCodes[0];
+        if (def) {
+          this.countryCode  = def.countryCode;
+          this.selectedFlag = this.getFlag(def.isoCodes);
+        }
+        this.cdr.markForCheck();
       },
-      error: (err) => {
-        console.error('Failed to load country codes:', err);
-      }
+      error: (err) => console.error('Failed to load country codes:', err)
     });
   }
-
 }

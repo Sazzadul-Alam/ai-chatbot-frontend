@@ -50,15 +50,51 @@
       <div class="field-group">
         <label class="field-label">Phone Number</label>
         <div class="input-wrap phone-wrap">
-          <select
-            class="country-select"
-            [(ngModel)]="countryCode"
-            name="countryCode"
-          >
-            <option *ngFor="let c of countryCodes" [value]="c.countryCode">
-              {{ c.isoCodes }} (+{{ c.countryCode }})
-            </option>
-          </select>
+
+          <!-- Custom flag + code trigger -->
+          <div class="flag-trigger" (click)="toggleDropdown()" #flagTrigger>
+            <span class="flag-emoji">{{ selectedFlag }}</span>
+            <span class="flag-dialcode">+{{ countryCode }}</span>
+            <svg class="flag-chevron" [class.open]="dropdownOpen"
+                 width="10" height="10" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+
+            <!-- Dropdown panel -->
+            <div class="flag-dropdown" *ngIf="dropdownOpen" (click)="$event.stopPropagation()">
+              <div class="flag-search-wrap">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  class="flag-search"
+                  type="text"
+                  placeholder="Search country…"
+                  [(ngModel)]="searchTerm"
+                  name="flagSearch"
+                  (ngModelChange)="onSearch()"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="flag-list">
+                <div
+                  class="flag-option"
+                  *ngFor="let c of filteredCountries"
+                  [class.active]="c.countryCode === countryCode"
+                  (click)="selectCountry(c)">
+                  <span class="flag-emoji">{{ getFlag(c.isoCodes) }}</span>
+                  <span class="flag-opt-name">{{ c.isoCodes }}</span>
+                  <span class="flag-opt-code">+{{ c.countryCode }}</span>
+                </div>
+                <div class="flag-empty" *ngIf="filteredCountries.length === 0">
+                  No results found
+                </div>
+              </div>
+            </div>
+          </div>
+
           <input
             class="field-input phone-input"
             type="tel"
@@ -83,12 +119,10 @@
             autocomplete="new-password"
           />
           <button type="button" class="eye-btn" (click)="togglePassword()" tabindex="-1">
-            <!-- Eye open -->
             <svg *ngIf="!showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
               <circle cx="12" cy="12" r="3"/>
             </svg>
-            <!-- Eye closed -->
             <svg *ngIf="showPassword" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
               <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>

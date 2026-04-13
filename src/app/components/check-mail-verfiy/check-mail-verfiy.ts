@@ -6,7 +6,8 @@ import {
 import { CommonModule } from '@angular/common';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { ChatService } from '../../services/chat.service';
-import {Login} from '../login/login';
+import { Login } from '../login/login';
+import {ToastService} from '../../shared/toast';
 
 @Component({
   selector: 'app-check-mail-verfiy',
@@ -16,11 +17,11 @@ import {Login} from '../login/login';
 })
 export class CheckMailVerfiy implements OnInit, AfterViewInit, OnDestroy {
 
-  // ← use inject() instead of constructor params
-  private ngZone = inject(NgZone);
-  private cdr = inject(ChangeDetectorRef);
-  private bsModalRef = inject(BsModalRef);
+  private ngZone      = inject(NgZone);
+  private cdr         = inject(ChangeDetectorRef);
+  private bsModalRef  = inject(BsModalRef);
   private chatService = inject(ChatService);
+  private toastr = inject(ToastService);        // ← add
 
   res: any = {};
   timeLeft: number = 120;
@@ -28,6 +29,7 @@ export class CheckMailVerfiy implements OnInit, AfterViewInit, OnDestroy {
   displayTime: string = '02:00';
 
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef>;
+
   constructor(
     private modalService: BsModalService,
     public loginModalRef: BsModalRef) {
@@ -96,6 +98,13 @@ export class CheckMailVerfiy implements OnInit, AfterViewInit, OnDestroy {
   resendCode() {
     this.timeLeft = 120;
     this.startTimer();
+    const formData = new FormData();
+    formData.append('loginId',        this.res.email);
+    this.chatService.resendCode(formData).subscribe({
+      next: (res) => {
+
+      }
+      });
   }
 
   activateAcc() {
@@ -106,6 +115,9 @@ export class CheckMailVerfiy implements OnInit, AfterViewInit, OnDestroy {
       .join('');
 
     if (otp.length < 4) {
+      this.toastr.error(
+        '',
+        'Please enter all 4 digits', 4000);
       console.warn('Please enter all 4 digits');
       return;
     }
@@ -116,12 +128,27 @@ export class CheckMailVerfiy implements OnInit, AfterViewInit, OnDestroy {
 
     this.chatService.activate(formData).subscribe({
       next: (res) => {
-        this.loginModalRef = this.modalService.show(Login, {
-          backdrop: 'static', keyboard: false,
-          class: 'modal-dialog modal-dialog-centered modal-sm'
-        });
+        // ── Success toast ───────────────────────────────────────────────
+        this.toastr.success(
+          'You have successfully signed up. Please login to continue',
+          'Signed Up', 4000);
+        // ────────────────────────────────────────────────────────────────
+
+        this.bsModalRef.hide();
+
+        setTimeout(() => {
+          this.loginModalRef = this.modalService.show(Login, {
+            backdrop: 'static', keyboard: false,
+            class: 'modal-dialog modal-dialog-centered modal-sm'
+          });
+        }, 400);
       },
-      error: (err) => console.error('Activation error:', err)
+      error: (err) => {
+        this.toastr.error(
+          '',
+          'OTP is not correct', 4000);
+        console.error('Activation error:', err)
+      }
     });
   }
 

@@ -34,6 +34,7 @@ export class LandingPage implements OnInit{
     // this.router.navigate(['/chat'])
     this.onClose.next({type:"guest",data:guestData});
     this.bsModalRef.hide()
+    window.location.reload()
   }
 
   onSignUp() {

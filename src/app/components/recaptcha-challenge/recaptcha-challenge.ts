@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 interface Challenge {
@@ -13,9 +13,9 @@ interface Challenge {
   templateUrl: './recaptcha-challenge.html',
   styleUrl: './recaptcha-challenge.css',
 })
-export class RecaptchaChallengeComponent {
+export class RecaptchaChallengeComponent implements OnInit {
   @Output() verified = new EventEmitter<void>();
-  @Output() closed = new EventEmitter<void>();
+  @Output() closed   = new EventEmitter<void>();
 
   challenges: Challenge[] = [
     {
@@ -81,9 +81,23 @@ export class RecaptchaChallengeComponent {
   ];
 
   currentIndex = 0;
-  selected = new Set<number>();
-  tiles = Array.from({ length: 9 }, (_, i) => i);
-  errorMsg = '';
+  selected     = new Set<number>();
+  tiles        = Array.from({ length: 9 }, (_, i) => i);
+  errorMsg     = '';
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit(): void {
+    this.shuffleChallenges();
+    this.currentIndex = Math.floor(Math.random() * this.challenges.length);
+  }
+
+  private shuffleChallenges(): void {
+    for (let i = this.challenges.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.challenges[i], this.challenges[j]] = [this.challenges[j], this.challenges[i]];
+    }
+  }
 
   get challenge(): Challenge {
     return this.challenges[this.currentIndex];
@@ -94,11 +108,14 @@ export class RecaptchaChallengeComponent {
   }
 
   toggleTile(index: number): void {
-    if (this.selected.has(index)) {
-      this.selected.delete(index);
+    // Reassign to new Set so Angular detects the change
+    const next = new Set(this.selected);
+    if (next.has(index)) {
+      next.delete(index);
     } else {
-      this.selected.add(index);
+      next.add(index);
     }
+    this.selected = next;
   }
 
   get selectedCount(): number {
@@ -106,9 +123,16 @@ export class RecaptchaChallengeComponent {
   }
 
   refresh(): void {
-    this.currentIndex = (this.currentIndex + 1) % this.challenges.length;
-    this.selected.clear();
-    this.errorMsg = '';
+    // Pick a random index different from the current one
+    let next: number;
+    do {
+      next = Math.floor(Math.random() * this.challenges.length);
+    } while (next === this.currentIndex && this.challenges.length > 1);
+
+    this.currentIndex = next;
+    this.selected     = new Set<number>(); // ← reassign, not .clear()
+    this.errorMsg     = '';
+    this.cdr.detectChanges();
   }
 
   verify(): void {
@@ -122,6 +146,7 @@ export class RecaptchaChallengeComponent {
       setTimeout(() => {
         this.refresh();
         this.errorMsg = '';
+        this.cdr.detectChanges();
       }, 800);
       return;
     }

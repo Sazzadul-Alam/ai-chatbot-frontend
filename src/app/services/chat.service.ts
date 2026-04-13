@@ -114,11 +114,30 @@ export class ChatService {
     const reason = payload?.choices?.[0]?.finish_reason;
     return reason !== undefined && reason !== null && reason !== '';
   }
+  private readonly GUEST_MAX_REQUESTS = 5;
+  private readonly GUEST_REQUEST_KEY = 'guest_request_count';
 
+  private getGuestRequestCount(): number {
+    return parseInt(sessionStorage.getItem(this.GUEST_REQUEST_KEY) ?? '0', 10);
+  }
+
+  private incrementGuestRequestCount(): void {
+    const count = this.getGuestRequestCount();
+    sessionStorage.setItem(this.GUEST_REQUEST_KEY, String(count + 1));
+  }
   sendMessageStream(
     messages: { role: string; content: string }[],
-    onChunk: (accumulated: string) => void,
+    onChunk: (accumulated: string) => void,userType:any
   ): Observable<string> {
+    if (userType === 'guest') {
+      const count = this.getGuestRequestCount();
+      if (count >= this.GUEST_MAX_REQUESTS) {
+        return new Observable<string>(observer => {
+          observer.error(new Error('Guest access limit reached. Kindly log in and try again.'));
+        });
+      }
+      this.incrementGuestRequestCount();
+    }
     return new Observable<string>(observer => {
       let accumulated = '';
       let buffer = '';
@@ -165,24 +184,27 @@ export class ChatService {
           return false;
         }
       };
+      if(userType!='guest'){
+        const dataForSave = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+            ...API_HEADERS,
+          },
+          body: JSON.stringify(this.buildPayload(messages)),
+          signal: ctrl.signal
+        };
 
-      const dataForSave = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
-          ...API_HEADERS,
-        },
-        body: JSON.stringify(this.buildPayload(messages)),
-        signal: ctrl.signal
-      };
+        this.saveRequest(dataForSave).subscribe({
+          next: (res:any) => console.log('Request saved:', res),
+          error: (err:any) => console.error('Failed to save request:', err)
+        });
+      }
 
-      this.saveRequest(dataForSave).subscribe({
-        next: (res:any) => console.log('Request saved:', res),
-        error: (err:any) => console.error('Failed to save request:', err)
-      });
+
 
       fetch(`${environment.apiUrl}/v1/chat/completions`, {
         method: 'POST',
@@ -317,6 +339,11 @@ export class ChatService {
     const accessToken = localStorage.getItem('accessToken');
     return this.http.get(`${environment.backend}/isage/get-conv`, {
       headers: { Authorization: `Bearer ${accessToken}` }
+    });
+  }
+  resendCode(obj: any): Observable<any> {
+    return this.http.post(`${environment.backend}/user/otp/reset`, obj, {
+      responseType: 'text'
     });
   }
 

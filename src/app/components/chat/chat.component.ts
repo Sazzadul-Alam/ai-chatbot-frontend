@@ -13,8 +13,8 @@ import { Subscription } from 'rxjs';
 import {LandingPage} from '../landing-page/landing-page';
 import {BsModalRef, BsModalService} from 'ngx-bootstrap/modal';
 import {Registration} from '../registration/registration';
-import {CheckMailVerfiy} from '../check-mail-verfiy/check-mail-verfiy';
 import {Router} from '@angular/router';
+import {TooltipModule} from 'ngx-bootstrap/tooltip';
 
 const escapeHtml = (v: string) =>
   v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -42,7 +42,7 @@ interface ConversationState {
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TooltipModule],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.css'],
   providers: [ChatService],
@@ -292,11 +292,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       };
     });
 
-    // ✅ send cleanConvObject directly, not wrapped in { data: ... }
-    this.chatService.saveConv(cleanConvObject).subscribe({
-      next: (res) => console.log('Conversation saved:', res),
-      error: (err) => console.error('Failed to save conversation:', err)
-    });
+    if(this.userData.type!='guest') {
+      this.chatService.saveConv(cleanConvObject).subscribe({
+        next: (res) => console.log('Conversation saved:', res),
+        error: (err) => console.error('Failed to save conversation:', err)
+      });
+    }
   }
   private loadConv(id: string): void {
     const s = this.convStore.get(id);
@@ -328,6 +329,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       if (this.conversations.length > 0) { this.currentConvId = this.conversations[0].id; this.loadConv(this.currentConvId); }
       else { this.newConversation(); return; }
     }
+    this.saveCurrentConv()
   }
 
   checkServer(): void {
@@ -390,7 +392,30 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
   formatTime(d: Date): string { return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
   copyMessage(id: string, content: string): void {
-    navigator.clipboard.writeText(content).then(() => { this.copiedId = id; setTimeout(() => (this.copiedId = ''), 2000); });
+    if (navigator?.clipboard?.writeText) {
+      // Secure context (HTTPS / localhost)
+      navigator.clipboard.writeText(content).then(() => {
+        this.copiedId = id;
+        setTimeout(() => (this.copiedId = ''), 2000);
+      });
+    } else {
+      // Fallback for HTTP (execCommand is deprecated but works everywhere)
+      const textarea = document.createElement('textarea');
+      textarea.value = content;
+      textarea.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        this.copiedId = id;
+        setTimeout(() => (this.copiedId = ''), 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
   }
   getUserPrompt(msgId: string): UserPrompt | undefined { return this.userPrompts.find(p => p.id === msgId); }
   isLastUserPrompt(promptId: string): boolean {
@@ -440,7 +465,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     // It calls cdr.detectChanges() which forces the view to update immediately.
     const onChunk = this.makeChunkHandler(aiMsgId);
 
-    this.streamSub = this.chatService.sendMessageStream(payload, onChunk).subscribe({
+    this.streamSub = this.chatService.sendMessageStream(payload, onChunk,this.userData.type).subscribe({
       next: (finalText: string) => {
         // final text received — update convStore
         const stored = this.convStore.get(convId);
@@ -579,6 +604,20 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.newConversation();
       }
     });
+  }
+  showLogoutConfirm = false;
+
+  openLogoutConfirm() {
+    this.showLogoutConfirm = true;
+  }
+
+  confirmLogout() {
+    localStorage.clear();
+    window.location.reload();
+  }
+
+  cancelLogout() {
+    this.showLogoutConfirm = false;
   }
 }
 
