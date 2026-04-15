@@ -47,13 +47,15 @@
       </div>
 
       <!-- Phone Number -->
+      <!-- Phone Number -->
       <div class="field-group">
         <label class="field-label">Phone Number</label>
         <div class="input-wrap phone-wrap">
 
-          <!-- Custom flag + code trigger -->
+          <!-- Your custom flag + code trigger (keep as-is) -->
+          <!-- Flag trigger button — show selected flag -->
           <div class="flag-trigger" (click)="toggleDropdown()" #flagTrigger>
-            <span class="flag-emoji">{{ selectedFlag }}</span>
+            <span class="fi" [class]="getFlagClass(selectedIso)"></span>
             <span class="flag-dialcode">+{{ countryCode }}</span>
             <svg class="flag-chevron" [class.open]="dropdownOpen"
                  width="10" height="10" viewBox="0 0 24 24"
@@ -61,7 +63,7 @@
               <polyline points="6 9 12 15 18 9"/>
             </svg>
 
-            <!-- Dropdown panel -->
+            <!-- Dropdown -->
             <div class="flag-dropdown" *ngIf="dropdownOpen" (click)="$event.stopPropagation()">
               <div class="flag-search-wrap">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -84,7 +86,7 @@
                   *ngFor="let c of filteredCountries"
                   [class.active]="c.countryCode === countryCode"
                   (click)="selectCountry(c)">
-                  <span class="flag-emoji">{{ getFlag(c.isoCodes) }}</span>
+                  <span class="fi" [class]="getFlagClass(c.isoCodes)"></span>
                   <span class="flag-opt-name">{{ c.isoCodes }}</span>
                   <span class="flag-opt-code">+{{ c.countryCode }}</span>
                 </div>
@@ -95,6 +97,7 @@
             </div>
           </div>
 
+          <!-- Single phone input, no duplicate name -->
           <input
             class="field-input phone-input"
             type="tel"
@@ -103,6 +106,7 @@
             name="phone"
             autocomplete="tel"
           />
+
         </div>
       </div>
 

@@ -14,7 +14,7 @@ import { Login } from '../login/login';
 @Component({
   selector: 'app-registration',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule], // ← removed NgxIntlTelInputModule
   templateUrl: './registration.html',
   styleUrl: './registration.css',
 })
@@ -35,7 +35,6 @@ export class Registration implements OnInit {
   ) {}
 
   prefill?: { userName?: string; email?: string; phone?: string };
-
   onRegistration = new Subject<any>();
 
   userName        = '';
@@ -49,10 +48,9 @@ export class Registration implements OnInit {
   errorMsg        = '';
   countryCode:    any;
 
-  // ── Flag dropdown state ───────────────────────────────────────────────────
   dropdownOpen  = false;
   searchTerm    = '';
-  selectedFlag  = '🌐';
+  selectedIso = '';
 
   ngOnInit(): void {
     this.loadCountryCodes();
@@ -63,9 +61,6 @@ export class Registration implements OnInit {
     }
   }
 
-  // ── Flag helpers ──────────────────────────────────────────────────────────
-
-  /** Convert 2-letter ISO code → flag emoji  e.g. 'BD' → 🇧🇩 */
   getFlag(isoCode: string): string {
     if (!isoCode || isoCode.length < 2) return '🌐';
     const code = isoCode.trim().toUpperCase().slice(0, 2);
@@ -90,14 +85,13 @@ export class Registration implements OnInit {
     );
   }
 
-  selectCountry(c: any): void {
-    this.countryCode  = c.countryCode;
-    this.selectedFlag = this.getFlag(c.isoCodes);
-    this.dropdownOpen = false;
-    this.cdr.markForCheck();
-  }
+  // selectCountry(c: any): void {
+  //   this.countryCode  = c.countryCode;
+  //   this.selectedFlag = this.getFlag(c.isoCodes);
+  //   this.dropdownOpen = false;
+  //   this.cdr.markForCheck();
+  // }
 
-  /** Close dropdown when clicking anywhere outside the trigger */
   @HostListener('document:click', ['$event'])
   onDocumentClick(e: MouseEvent): void {
     if (this.flagTriggerRef &&
@@ -105,8 +99,6 @@ export class Registration implements OnInit {
       this.dropdownOpen = false;
     }
   }
-
-  // ── Form ──────────────────────────────────────────────────────────────────
 
   togglePassword(): void { this.showPassword = !this.showPassword; }
   toggleConfirm(): void  { this.showConfirm  = !this.showConfirm;  }
@@ -138,10 +130,13 @@ export class Registration implements OnInit {
 
     this.isLoading = true;
 
+    // ✅ Combine country code + local number
+    const fullPhone = `+${this.countryCode}${this.phone}`;
+
     const registrationData = {
       name:    this.userName,
       email:   this.email,
-      phone:   this.phone,
+      phone:   fullPhone,
       type:    'registered',
       isGuest: false,
     };
@@ -149,7 +144,7 @@ export class Registration implements OnInit {
     const formData = new FormData();
     formData.append('name',        this.userName);
     formData.append('email',       this.email);
-    formData.append('phoneNumber', this.phone);
+    formData.append('phoneNumber', fullPhone);  // ✅ sends +8801xxxxxxxxx
     formData.append('password',    this.password);
 
     this.chatService.registration(formData).subscribe({
@@ -186,19 +181,47 @@ export class Registration implements OnInit {
       class: 'modal-dialog modal-dialog-centered modal-sm'
     });
   }
-
+  //
+  // loadCountryCodes(): void {
+  //   this.chatService.getCountryCode().subscribe({
+  //     next: (res: any) => {
+  //       this.countryCodes      = res;
+  //       this.filteredCountries = [...res];
+  //
+  //       const bd  = this.countryCodes.find(c => c.countryCode === '880');
+  //       const def = bd ?? this.countryCodes[0];
+  //       if (def) {
+  //         this.countryCode  = def.countryCode;
+  //         this.selectedFlag = this.getFlag(def.isoCodes);
+  //       }
+  //       this.cdr.markForCheck();
+  //     },
+  //     error: (err) => console.error('Failed to load country codes:', err)
+  //   });
+  // }
+  getFlagClass(isoCode: string): string {
+    if (!isoCode || isoCode.length < 2) return '';
+    return `fi fi-${isoCode.trim().toLowerCase().slice(0, 2)}`;
+  }
+  // Update selectCountry():
+  selectCountry(c: any): void {
+    this.countryCode = c.countryCode;
+    this.selectedIso = c.isoCodes;       // ← store ISO code, not emoji
+    this.dropdownOpen = false;
+    this.cdr.markForCheck();
+  }
+  // Update loadCountryCodes():
   loadCountryCodes(): void {
     this.chatService.getCountryCode().subscribe({
       next: (res: any) => {
         this.countryCodes      = res;
         this.filteredCountries = [...res];
 
-        // Default to Bangladesh
         const bd  = this.countryCodes.find(c => c.countryCode === '880');
         const def = bd ?? this.countryCodes[0];
         if (def) {
-          this.countryCode  = def.countryCode;
-          this.selectedFlag = this.getFlag(def.isoCodes);
+          this.countryCode = def.countryCode;
+          this.selectedIso = def.isoCodes;   // ← store ISO code
         }
         this.cdr.markForCheck();
       },

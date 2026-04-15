@@ -28,9 +28,14 @@
                 "glob": "**/*",
                 "input": "src/app/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "node_modules/flag-icons/flags",
+                "output": "media",
+                "ignore": []
               }
             ],
-
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "src/styles.css"
