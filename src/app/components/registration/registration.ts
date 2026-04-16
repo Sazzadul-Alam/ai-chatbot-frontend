@@ -118,7 +118,7 @@ export class Registration implements OnInit {
       this.errorMsg = 'Please enter a valid email address.';
       return;
     }
-    if (this.phoneNumberLimit && this.phone.length !== this.phoneNumberLimit) {
+    if (Number(this.phoneNumberLimit) && this.phone.length !== Number(this.phoneNumberLimit)) {
       this.errorMsg = `Phone number must be exactly ${this.phoneNumberLimit} digits.`;
       return;
     }
