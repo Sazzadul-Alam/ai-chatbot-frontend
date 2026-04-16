@@ -51,6 +51,7 @@ export class Registration implements OnInit {
   dropdownOpen  = false;
   searchTerm    = '';
   selectedIso = '';
+  phoneNumberLimit:    any;
 
   ngOnInit(): void {
     this.loadCountryCodes();
@@ -115,6 +116,10 @@ export class Registration implements OnInit {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.email)) {
       this.errorMsg = 'Please enter a valid email address.';
+      return;
+    }
+    if (this.phoneNumberLimit && this.phone.length !== this.phoneNumberLimit) {
+      this.errorMsg = `Phone number must be exactly ${this.phoneNumberLimit} digits.`;
       return;
     }
 
@@ -207,6 +212,7 @@ export class Registration implements OnInit {
   selectCountry(c: any): void {
     this.countryCode = c.countryCode;
     this.selectedIso = c.isoCodes;       // ← store ISO code, not emoji
+    this.phoneNumberLimit = c.phoneNumberLimit;       // ← store ISO code, not emoji
     this.dropdownOpen = false;
     this.cdr.markForCheck();
   }
@@ -221,11 +227,20 @@ export class Registration implements OnInit {
         const def = bd ?? this.countryCodes[0];
         if (def) {
           this.countryCode = def.countryCode;
-          this.selectedIso = def.isoCodes;   // ← store ISO code
+          this.selectedIso = def.isoCodes;
+          this.phoneNumberLimit = def.phoneNumberLimit;
         }
         this.cdr.markForCheck();
       },
       error: (err) => console.error('Failed to load country codes:', err)
     });
+  }
+
+  onPhoneInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const limit = this.phoneNumberLimit;
+    if (limit && input.value.length > limit) {
+      this.phone = input.value.slice(0, limit);
+    }
   }
 }

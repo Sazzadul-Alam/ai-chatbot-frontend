@@ -105,6 +105,8 @@
             [(ngModel)]="phone"
             name="phone"
             autocomplete="tel"
+            [maxlength]="phoneNumberLimit"
+            (input)="onPhoneInput($event)"
           />
 
         </div>

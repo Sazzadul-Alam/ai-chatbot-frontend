@@ -321,16 +321,16 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.clearFiles(); this.userInput = ''; this.shouldScroll = true;
   }
 
-  deleteConversation(id: string, e: Event): void {
-    e.stopPropagation();
-    this.convStore.delete(id);
-    this.conversations = this.conversations.filter(c => c.id !== id);
-    if (this.currentConvId === id) {
-      if (this.conversations.length > 0) { this.currentConvId = this.conversations[0].id; this.loadConv(this.currentConvId); }
-      else { this.newConversation(); return; }
-    }
-    this.saveCurrentConv()
-  }
+  // deleteConversation(id: string, e: Event): void {
+  //   e.stopPropagation();
+  //   this.convStore.delete(id);
+  //   this.conversations = this.conversations.filter(c => c.id !== id);
+  //   if (this.currentConvId === id) {
+  //     if (this.conversations.length > 0) { this.currentConvId = this.conversations[0].id; this.loadConv(this.currentConvId); }
+  //     else { this.newConversation(); return; }
+  //   }
+  //   this.saveCurrentConv()
+  // }
 
   checkServer(): void {
     this.chatService.checkHealth().subscribe({
@@ -431,7 +431,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // ── Send ──────────────────────────────────────────────────────────────────
   send(): void {
     if (!this.canSend) return;
 
@@ -455,55 +454,162 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.activeAssistantMsgId = aiMsgId;
     this.stopRequested = false;
     this.shouldScroll  = true;
-    this.cdr.detectChanges(); // show the loading bubble immediately
+    this.cdr.detectChanges();
 
     const convId = this.currentConvId;
     this.streamSub?.unsubscribe();
 
-    // ── Pass the chunk handler directly into the stream ───────────────────
-    // onChunk is called synchronously on every token inside the fetch loop.
-    // It calls cdr.detectChanges() which forces the view to update immediately.
     const onChunk = this.makeChunkHandler(aiMsgId);
 
-    this.streamSub = this.chatService.sendMessageStream(payload, onChunk,this.userData.type).subscribe({
+    this.streamSub = this.chatService.sendMessageStream(payload, onChunk, this.userData.type).subscribe({
       next: (finalText: string) => {
-        // final text received — update convStore
         const stored = this.convStore.get(convId);
-        if (stored) { const m = stored.messages.find(m => m.id === aiMsgId); if (m) m.content = finalText; }
+        if (stored) {
+          const m = stored.messages.find(m => m.id === aiMsgId);
+          if (m) m.content = finalText;
+        }
       },
       error: (err: any) => {
-        this.streamSub = null; this.activeAssistantMsgId = null;
+        this.streamSub = null;
+        this.activeAssistantMsgId = null;
         if (this.stopRequested) { this.stopRequested = false; return; }
-        this.isLoading = false; this.serverOnline = false;
+
         const msg = this.messages.find(m => m.id === aiMsgId);
         if (msg) {
           msg.content = (err?.message?.includes('TimeoutError') || err?.name === 'TimeoutError')
-            ? 'Timed out. Try a shorter message.' : `Connection error: ${err?.message ?? 'Check llama-server at 192.168.14.74:8080'}`;
+            ? 'Timed out. Try a shorter message.'
+            : `Connection error: ${err?.message ?? 'Check llama-server'}`;
           this.updateMessageHtml(msg);
         }
-        this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
+        this.shouldScroll = true;
+        this.saveCurrentConv();
+
+        // ✅ Force immediate UI update
+        this.zone.run(() => {
+          this.isLoading = false;
+          this.serverOnline = false;
+          this.messages = [...this.messages];
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
       complete: () => {
-        this.streamSub = null; this.activeAssistantMsgId = null;
-        this.isLoading = false; this.serverOnline = true;
+        this.streamSub = null;
+        this.activeAssistantMsgId = null;
+        this.serverOnline = true;
+
         const msg = this.messages.find(m => m.id === aiMsgId);
         if (msg) {
           msg.content = this.cleanResponse(msg.content);
           const { finalAnswer } = this.extractSections(msg.content);
           this.chatHistory.push({ role: 'assistant', content: finalAnswer });
-          this.updateMessageHtml(msg); // full markdown on finish
+          this.updateMessageHtml(msg);
         }
-        this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
+        this.shouldScroll = true;
+        this.saveCurrentConv();
+
+        // ✅ Force immediate UI update
+        this.zone.run(() => {
+          this.isLoading = false;
+          this.messages = [...this.messages];
+          this.cdr.markForCheck();
+          this.cdr.detectChanges();
+        });
       },
     });
   }
 
-  // ── Pause ─────────────────────────────────────────────────────────────────
+  // // ── Send ──────────────────────────────────────────────────────────────────
+  // send(): void {
+  //   if (!this.canSend) return;
+  //
+  //   const msgId = Date.now().toString();
+  //   this.userPrompts.push({ id: msgId, text: this.userInput, files: [...this.filePreviews], timestamp: new Date() });
+  //   this.messages.push({ id: msgId, role: 'user', content: this.userInput, files: [...this.filePreviews], timestamp: new Date() });
+  //   this.shouldScroll = true;
+  //
+  //   const conv = this.conversations.find(c => c.id === this.currentConvId);
+  //   if (conv && conv.title === 'New conversation') conv.title = this.userInput.slice(0, 40);
+  //
+  //   const payload = [...this.chatHistory.slice(-4), { role: 'user', content: this.userInput }];
+  //   this.chatHistory.push({ role: 'user', content: this.userInput });
+  //
+  //   this.userInput = ''; this.clearFiles();
+  //   if (this.textarea) this.textarea.nativeElement.style.height = 'auto';
+  //   this.isLoading = true;
+  //
+  //   const aiMsgId = (Date.now() + 1).toString();
+  //   this.messages.push({ id: aiMsgId, role: 'assistant', content: '', timestamp: new Date() });
+  //   this.activeAssistantMsgId = aiMsgId;
+  //   this.stopRequested = false;
+  //   this.shouldScroll  = true;
+  //   this.cdr.detectChanges(); // show the loading bubble immediately
+  //
+  //   const convId = this.currentConvId;
+  //   this.streamSub?.unsubscribe();
+  //
+  //   // ── Pass the chunk handler directly into the stream ───────────────────
+  //   // onChunk is called synchronously on every token inside the fetch loop.
+  //   // It calls cdr.detectChanges() which forces the view to update immediately.
+  //   const onChunk = this.makeChunkHandler(aiMsgId);
+  //
+  //   this.streamSub = this.chatService.sendMessageStream(payload, onChunk,this.userData.type).subscribe({
+  //     next: (finalText: string) => {
+  //       // final text received — update convStore
+  //       const stored = this.convStore.get(convId);
+  //       if (stored) { const m = stored.messages.find(m => m.id === aiMsgId); if (m) m.content = finalText; }
+  //     },
+  //     error: (err: any) => {
+  //       this.streamSub = null; this.activeAssistantMsgId = null;
+  //       if (this.stopRequested) { this.stopRequested = false; return; }
+  //       this.isLoading = false; this.serverOnline = false;
+  //       const msg = this.messages.find(m => m.id === aiMsgId);
+  //       if (msg) {
+  //         msg.content = (err?.message?.includes('TimeoutError') || err?.name === 'TimeoutError')
+  //           ? 'Timed out. Try a shorter message.' : `Connection error: ${err?.message ?? 'Check llama-server at 192.168.14.74:8080'}`;
+  //         this.updateMessageHtml(msg);
+  //       }
+  //       this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
+  //     },
+  //     complete: () => {
+  //       this.streamSub = null; this.activeAssistantMsgId = null;
+  //       this.isLoading = false; this.serverOnline = true;
+  //       const msg = this.messages.find(m => m.id === aiMsgId);
+  //       if (msg) {
+  //         msg.content = this.cleanResponse(msg.content);
+  //         const { finalAnswer } = this.extractSections(msg.content);
+  //         this.chatHistory.push({ role: 'assistant', content: finalAnswer });
+  //         this.updateMessageHtml(msg); // full markdown on finish
+  //       }
+  //       this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
+  //     },
+  //   });
+  // }
+  //
+  // // ── Pause ─────────────────────────────────────────────────────────────────
+  // pauseGeneration(): void {
+  //   if (!this.isLoading) return;
+  //   this.stopRequested = true;
+  //   this.streamSub?.unsubscribe(); this.streamSub = null;
+  //   this.isLoading = false;
+  //   if (this.activeAssistantMsgId) {
+  //     const msg = this.messages.find(m => m.id === this.activeAssistantMsgId);
+  //     if (msg?.content) {
+  //       msg.content = this.cleanResponse(msg.content);
+  //       this.updateMessageHtml(msg);
+  //       const { finalAnswer } = this.extractSections(msg.content);
+  //       this.chatHistory.push({ role: 'assistant', content: finalAnswer });
+  //     }
+  //   }
+  //   this.activeAssistantMsgId = null; this.shouldScroll = true;
+  //   this.saveCurrentConv(); this.cdr.detectChanges();
+  // }
   pauseGeneration(): void {
     if (!this.isLoading) return;
     this.stopRequested = true;
-    this.streamSub?.unsubscribe(); this.streamSub = null;
-    this.isLoading = false;
+    this.streamSub?.unsubscribe();
+    this.streamSub = null;
+
     if (this.activeAssistantMsgId) {
       const msg = this.messages.find(m => m.id === this.activeAssistantMsgId);
       if (msg?.content) {
@@ -513,10 +619,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.chatHistory.push({ role: 'assistant', content: finalAnswer });
       }
     }
-    this.activeAssistantMsgId = null; this.shouldScroll = true;
-    this.saveCurrentConv(); this.cdr.detectChanges();
-  }
 
+    this.activeAssistantMsgId = null;
+    this.shouldScroll = true;
+    this.saveCurrentConv();
+
+    // ✅ Force immediate UI update
+    this.zone.run(() => {
+      this.isLoading = false;
+      this.messages = [...this.messages];
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+    });
+  }
   openModal(){
       this.bsModalRef = this.modalService.show(LandingPage, {
         backdrop: 'static', keyboard: false,
@@ -606,6 +721,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
   showLogoutConfirm = false;
+  deleteConversationdata: any=false;
 
   openLogoutConfirm() {
     this.showLogoutConfirm = true;
@@ -618,6 +734,38 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   cancelLogout() {
     this.showLogoutConfirm = false;
+  }
+  // Replace the existing deleteConversation method and add the missing ones
+
+  deleteConversation(id: string, e: Event): void {
+    e.stopPropagation();
+    this.deleteConversationdata = id; // ✅ store the id to delete, not just true
+  }
+
+  confirmDelete(): void {
+    const id = this.deleteConversationdata;
+    if (!id) return;
+
+    this.convStore.delete(id);
+    this.conversations = this.conversations.filter(c => c.id !== id);
+
+    if (this.currentConvId === id) {
+      if (this.conversations.length > 0) {
+        this.currentConvId = this.conversations[0].id;
+        this.loadConv(this.currentConvId);
+      } else {
+        this.deleteConversationdata = false;
+        this.newConversation();
+        return;
+      }
+    }
+
+    this.deleteConversationdata = false;
+    this.saveCurrentConv();
+  }
+
+  cancelDelete(): void {
+    this.deleteConversationdata = false;
   }
 }
 
