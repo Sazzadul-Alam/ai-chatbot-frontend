@@ -48,9 +48,10 @@ interface ConversationState {
   providers: [ChatService],
 })
 export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
-  @ViewChild('messagesEnd') private messagesEnd!: ElementRef;
-  @ViewChild('fileInput')   private fileInput!:   ElementRef;
-  @ViewChild('textarea')    private textarea!:    ElementRef;
+  @ViewChild('messagesEnd')      private messagesEnd!:      ElementRef;
+  @ViewChild('fileInput')        private fileInput!:        ElementRef;
+  @ViewChild('textarea')         private textarea!:         ElementRef;
+  @ViewChild('scrollContainer')  private scrollContainer!:  ElementRef;  // ← NEW
 
   messages:      RichMessage[]                       = [];
   userInput:     string                              = '';
@@ -68,8 +69,11 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   serverProps:   ServerProps | null                  = null;
   modelAlias:    string                              = 'Loading…';
   contextSize:   number                              = 0;
-  userData: any= [];
-  registrationData: any= [];
+  userData:      any                                 = [];
+  registrationData: any                             = [];
+
+  // ── Scroll-lock state ────────────────────────────────────────────────────
+  userScrolled:  boolean = false;   // true when user has scrolled up during streaming
 
   private convStore          = new Map<string, ConversationState>();
   private isBrowser          = false;
@@ -88,7 +92,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     private modalService: BsModalService,
     public bsModalRef: BsModalRef,
     private router: Router,
-    public registrationbsModalRef:BsModalRef
+    public registrationbsModalRef: BsModalRef
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
     if (this.isBrowser) this.setupMarked();
@@ -101,9 +105,9 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.userData = JSON.parse(user);
       if (!this.userData?.name) {
         this.openModal();
-        this.newConversation(); // ← only create new conv if not logged in
+        this.newConversation();
       } else {
-        this.loadUserConversations(); // ← this will handle conversation setup
+        this.loadUserConversations();
       }
     } else {
       this.openModal();
@@ -121,6 +125,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }, 0);
     }
   }
+
   ngOnDestroy(): void { this.streamSub?.unsubscribe(); }
 
   private applyProps(props: ServerProps): void {
@@ -131,10 +136,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   ngAfterViewChecked(): void {
     if (!this.isBrowser) return;
+
+    // ── Scroll-lock: only auto-scroll if user hasn't scrolled up ────────────
     if (this.shouldScroll) {
-      try { this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' }); } catch { }
+      if (!this.userScrolled) {
+        try {
+          this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' });
+        } catch { }
+      }
+      // Always clear the flag so we don't loop
       this.shouldScroll = false;
     }
+
+    // Wire up code-copy buttons
     document.querySelectorAll('.code-block').forEach(block => {
       if (this.codeBlockListeners.has(block)) return;
       this.codeBlockListeners.set(block, true);
@@ -151,6 +165,23 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         });
       });
     });
+  }
+
+  // ── Scroll listener: called from (scroll) on the .msgs container ─────────
+  onMsgsScroll(): void {
+    const el = this.scrollContainer?.nativeElement;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    // If user is more than 80px from the bottom, consider them as "scrolled up"
+    this.userScrolled = distFromBottom > 80;
+  }
+
+  // ── Programmatic scroll-to-bottom (used by the "↓ scroll down" button) ───
+  scrollToBottom(): void {
+    this.userScrolled = false;
+    try {
+      this.messagesEnd?.nativeElement.scrollIntoView({ behavior: 'smooth' });
+    } catch { }
   }
 
   // ── Markdown ──────────────────────────────────────────────────────────────
@@ -235,11 +266,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
-  // ── THE KEY METHOD ────────────────────────────────────────────────────────
-  // This is passed as the `onChunk` callback to sendMessageStream().
-  // It runs synchronously inside the fetch read loop.
-  // It updates the message and calls cdr.detectChanges() directly —
-  // this works regardless of zone, regardless of Angular version.
   private makeChunkHandler(msgId: string): (text: string) => void {
     return (fullText: string) => {
       this.zone.run(() => {
@@ -266,19 +292,18 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     };
   }
 
-  // Conversation management
+  // ── Conversation management ───────────────────────────────────────────────
   private saveCurrentConv(): void {
     if (!this.currentConvId) return;
 
     this.convStore.set(this.currentConvId, {
-      messages: [...this.messages],
+      messages:    [...this.messages],
       chatHistory: [...this.chatHistory],
       userPrompts: [...this.userPrompts],
     });
 
     const convObject = Object.fromEntries(this.convStore);
 
-    // strip SafeHtml fields before saving
     const cleanConvObject: any = {};
     Object.entries(convObject).forEach(([id, state]) => {
       cleanConvObject[id] = {
@@ -292,17 +317,23 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       };
     });
 
-    if(this.userData.type!='guest') {
+    if (this.userData.type !== 'guest') {
       this.chatService.saveConv(cleanConvObject).subscribe({
-        next: (res) => console.log('Conversation saved:', res),
+        next:  (res) => console.log('Conversation saved:', res),
         error: (err) => console.error('Failed to save conversation:', err)
       });
     }
   }
+
   private loadConv(id: string): void {
     const s = this.convStore.get(id);
-    if (s) { this.messages = [...s.messages]; this.chatHistory = [...s.chatHistory]; this.userPrompts = [...s.userPrompts]; }
-    else   { this.messages = []; this.chatHistory = []; this.userPrompts = []; }
+    if (s) {
+      this.messages    = [...s.messages];
+      this.chatHistory = [...s.chatHistory];
+      this.userPrompts = [...s.userPrompts];
+    } else {
+      this.messages = []; this.chatHistory = []; this.userPrompts = [];
+    }
   }
 
   newConversation(): void {
@@ -313,24 +344,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.convStore.set(id, { messages: [], chatHistory: [], userPrompts: [] });
     this.messages = []; this.chatHistory = []; this.userPrompts = [];
     this.clearFiles(); this.userInput = '';
+    this.userScrolled = false;  // ← reset scroll-lock on new conversation
   }
 
   selectConversation(id: string): void {
     if (id === this.currentConvId) return;
-    this.saveCurrentConv(); this.currentConvId = id; this.loadConv(id);
-    this.clearFiles(); this.userInput = ''; this.shouldScroll = true;
+    this.saveCurrentConv();
+    this.currentConvId = id;
+    this.loadConv(id);
+    this.clearFiles();
+    this.userInput    = '';
+    this.userScrolled = false;  // ← reset scroll-lock when switching conversations
+    this.shouldScroll = true;
   }
-
-  // deleteConversation(id: string, e: Event): void {
-  //   e.stopPropagation();
-  //   this.convStore.delete(id);
-  //   this.conversations = this.conversations.filter(c => c.id !== id);
-  //   if (this.currentConvId === id) {
-  //     if (this.conversations.length > 0) { this.currentConvId = this.conversations[0].id; this.loadConv(this.currentConvId); }
-  //     else { this.newConversation(); return; }
-  //   }
-  //   this.saveCurrentConv()
-  // }
 
   checkServer(): void {
     this.chatService.checkHealth().subscribe({
@@ -348,7 +374,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
 
   onFileSelect(event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (input.files) this.addFiles(Array.from(input.files)); input.value = '';
+    if (input.files) this.addFiles(Array.from(input.files));
+    input.value = '';
   }
 
   addFiles(files: File[]): void {
@@ -375,7 +402,8 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
   onKeyDown(e: KeyboardEvent): void { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } }
   autoResize(e: Event): void {
     const t = e.target as HTMLTextAreaElement;
-    t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 180) + 'px';
+    t.style.height = 'auto';
+    t.style.height = Math.min(t.scrollHeight, 180) + 'px';
   }
   get canSend(): boolean { return (!!this.userInput.trim() || this.selectedFiles.length > 0) && !this.isLoading; }
 
@@ -387,19 +415,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     if (type.includes('text')) return '📃'; return '📎';
   }
   formatSize(b: number): string {
-    if (b < 1024) return b + ' B'; if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
     return (b / 1048576).toFixed(1) + ' MB';
   }
   formatTime(d: Date): string { return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+
   copyMessage(id: string, content: string): void {
     if (navigator?.clipboard?.writeText) {
-      // Secure context (HTTPS / localhost)
       navigator.clipboard.writeText(content).then(() => {
         this.copiedId = id;
         setTimeout(() => (this.copiedId = ''), 2000);
       });
     } else {
-      // Fallback for HTTP (execCommand is deprecated but works everywhere)
       const textarea = document.createElement('textarea');
       textarea.value = content;
       textarea.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
@@ -417,6 +445,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     }
   }
+
   getUserPrompt(msgId: string): UserPrompt | undefined { return this.userPrompts.find(p => p.id === msgId); }
   isLastUserPrompt(promptId: string): boolean {
     if (!this.userPrompts.length || this.isLoading) return false;
@@ -427,12 +456,17 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.userInput = prompt.text; this.clearFiles();
     if (this.textarea?.nativeElement) {
       const el = this.textarea.nativeElement as HTMLTextAreaElement;
-      el.focus(); el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+      el.focus(); el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 180) + 'px';
     }
   }
 
+  // ── Send ──────────────────────────────────────────────────────────────────
   send(): void {
     if (!this.canSend) return;
+
+    // ── Reset scroll-lock when user sends a new message ─────────────────────
+    this.userScrolled = false;
 
     const msgId = Date.now().toString();
     this.userPrompts.push({ id: msgId, text: this.userInput, files: [...this.filePreviews], timestamp: new Date() });
@@ -484,7 +518,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.shouldScroll = true;
         this.saveCurrentConv();
 
-        // ✅ Force immediate UI update
         this.zone.run(() => {
           this.isLoading = false;
           this.serverOnline = false;
@@ -508,7 +541,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.shouldScroll = true;
         this.saveCurrentConv();
 
-        // ✅ Force immediate UI update
         this.zone.run(() => {
           this.isLoading = false;
           this.messages = [...this.messages];
@@ -519,91 +551,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     });
   }
 
-  // // ── Send ──────────────────────────────────────────────────────────────────
-  // send(): void {
-  //   if (!this.canSend) return;
-  //
-  //   const msgId = Date.now().toString();
-  //   this.userPrompts.push({ id: msgId, text: this.userInput, files: [...this.filePreviews], timestamp: new Date() });
-  //   this.messages.push({ id: msgId, role: 'user', content: this.userInput, files: [...this.filePreviews], timestamp: new Date() });
-  //   this.shouldScroll = true;
-  //
-  //   const conv = this.conversations.find(c => c.id === this.currentConvId);
-  //   if (conv && conv.title === 'New conversation') conv.title = this.userInput.slice(0, 40);
-  //
-  //   const payload = [...this.chatHistory.slice(-4), { role: 'user', content: this.userInput }];
-  //   this.chatHistory.push({ role: 'user', content: this.userInput });
-  //
-  //   this.userInput = ''; this.clearFiles();
-  //   if (this.textarea) this.textarea.nativeElement.style.height = 'auto';
-  //   this.isLoading = true;
-  //
-  //   const aiMsgId = (Date.now() + 1).toString();
-  //   this.messages.push({ id: aiMsgId, role: 'assistant', content: '', timestamp: new Date() });
-  //   this.activeAssistantMsgId = aiMsgId;
-  //   this.stopRequested = false;
-  //   this.shouldScroll  = true;
-  //   this.cdr.detectChanges(); // show the loading bubble immediately
-  //
-  //   const convId = this.currentConvId;
-  //   this.streamSub?.unsubscribe();
-  //
-  //   // ── Pass the chunk handler directly into the stream ───────────────────
-  //   // onChunk is called synchronously on every token inside the fetch loop.
-  //   // It calls cdr.detectChanges() which forces the view to update immediately.
-  //   const onChunk = this.makeChunkHandler(aiMsgId);
-  //
-  //   this.streamSub = this.chatService.sendMessageStream(payload, onChunk,this.userData.type).subscribe({
-  //     next: (finalText: string) => {
-  //       // final text received — update convStore
-  //       const stored = this.convStore.get(convId);
-  //       if (stored) { const m = stored.messages.find(m => m.id === aiMsgId); if (m) m.content = finalText; }
-  //     },
-  //     error: (err: any) => {
-  //       this.streamSub = null; this.activeAssistantMsgId = null;
-  //       if (this.stopRequested) { this.stopRequested = false; return; }
-  //       this.isLoading = false; this.serverOnline = false;
-  //       const msg = this.messages.find(m => m.id === aiMsgId);
-  //       if (msg) {
-  //         msg.content = (err?.message?.includes('TimeoutError') || err?.name === 'TimeoutError')
-  //           ? 'Timed out. Try a shorter message.' : `Connection error: ${err?.message ?? 'Check llama-server at 192.168.14.74:8080'}`;
-  //         this.updateMessageHtml(msg);
-  //       }
-  //       this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
-  //     },
-  //     complete: () => {
-  //       this.streamSub = null; this.activeAssistantMsgId = null;
-  //       this.isLoading = false; this.serverOnline = true;
-  //       const msg = this.messages.find(m => m.id === aiMsgId);
-  //       if (msg) {
-  //         msg.content = this.cleanResponse(msg.content);
-  //         const { finalAnswer } = this.extractSections(msg.content);
-  //         this.chatHistory.push({ role: 'assistant', content: finalAnswer });
-  //         this.updateMessageHtml(msg); // full markdown on finish
-  //       }
-  //       this.shouldScroll = true; this.saveCurrentConv(); this.cdr.detectChanges();
-  //     },
-  //   });
-  // }
-  //
-  // // ── Pause ─────────────────────────────────────────────────────────────────
-  // pauseGeneration(): void {
-  //   if (!this.isLoading) return;
-  //   this.stopRequested = true;
-  //   this.streamSub?.unsubscribe(); this.streamSub = null;
-  //   this.isLoading = false;
-  //   if (this.activeAssistantMsgId) {
-  //     const msg = this.messages.find(m => m.id === this.activeAssistantMsgId);
-  //     if (msg?.content) {
-  //       msg.content = this.cleanResponse(msg.content);
-  //       this.updateMessageHtml(msg);
-  //       const { finalAnswer } = this.extractSections(msg.content);
-  //       this.chatHistory.push({ role: 'assistant', content: finalAnswer });
-  //     }
-  //   }
-  //   this.activeAssistantMsgId = null; this.shouldScroll = true;
-  //   this.saveCurrentConv(); this.cdr.detectChanges();
-  // }
+  // ── Pause ─────────────────────────────────────────────────────────────────
   pauseGeneration(): void {
     if (!this.isLoading) return;
     this.stopRequested = true;
@@ -624,7 +572,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.shouldScroll = true;
     this.saveCurrentConv();
 
-    // ✅ Force immediate UI update
     this.zone.run(() => {
       this.isLoading = false;
       this.messages = [...this.messages];
@@ -632,39 +579,38 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       this.cdr.detectChanges();
     });
   }
-  openModal(){
-      this.bsModalRef = this.modalService.show(LandingPage, {
-        backdrop: 'static', keyboard: false,
-        class: 'modal-dialog modal-dialog-centered modal-sm'
-      });
 
-    this.bsModalRef.content.onClose.subscribe((res:any) => {
-      this.userData=res;
-      if(this.userData.type=='registration'){
+  // ── Modal ─────────────────────────────────────────────────────────────────
+  openModal() {
+    this.bsModalRef = this.modalService.show(LandingPage, {
+      backdrop: 'static', keyboard: false,
+      class: 'modal-dialog modal-dialog-centered modal-sm'
+    });
+
+    this.bsModalRef.content.onClose.subscribe((res: any) => {
+      this.userData = res;
+      if (this.userData.type === 'registration') {
         this.registrationbsModalRef = this.modalService.show(Registration, {
           backdrop: 'static', keyboard: false,
           class: 'modal-dialog modal-dialog-centered modal-sm'
         });
-        this.registrationbsModalRef.content.onRegistration.subscribe((res:any) => {
-          this.registrationData=res.data;
-
-          this.registrationbsModalRef.content.onRegistration.complete()
-        })
+        this.registrationbsModalRef.content.onRegistration.subscribe((res: any) => {
+          this.registrationData = res.data;
+          this.registrationbsModalRef.content.onRegistration.complete();
+        });
       }
-      this.bsModalRef.content.onClose.complete()
-    })
-
+      this.bsModalRef.content.onClose.complete();
+    });
   }
-  logout(){
-    localStorage.clear()
+
+  logout() {
+    localStorage.clear();
     window.location.reload();
   }
-
 
   private loadUserConversations(): void {
     this.chatService.getConv().subscribe({
       next: (res: any) => {
-        // ✅ res.data is the convObject directly now
         const data: Record<string, ConversationState> = res?.data;
 
         if (!data || Object.keys(data).length === 0) {
@@ -672,7 +618,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           return;
         }
 
-        // restore convStore + re-render HTML for each message
         Object.entries(data).forEach(([id, state]) => {
           const messages = (state.messages ?? []).map(msg => {
             const rich: RichMessage = { ...msg };
@@ -690,7 +635,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
           });
         });
 
-        // restore sidebar list — sort by id descending (newest first)
         this.conversations = Object.entries(data)
           .sort(([a], [b]) => Number(b) - Number(a))
           .map(([id, state]) => ({
@@ -699,7 +643,6 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
               ?.content?.slice(0, 40) ?? 'Conversation',
           }));
 
-        // set currentConvId and load latest
         const latestId = this.conversations[0].id;
         this.currentConvId = latestId;
 
@@ -720,26 +663,19 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
       }
     });
   }
+
+  // ── Logout confirm ────────────────────────────────────────────────────────
   showLogoutConfirm = false;
-  deleteConversationdata: any=false;
+  deleteConversationdata: any = false;
 
-  openLogoutConfirm() {
-    this.showLogoutConfirm = true;
-  }
+  openLogoutConfirm() { this.showLogoutConfirm = true; }
+  confirmLogout() { localStorage.clear(); window.location.reload(); }
+  cancelLogout() { this.showLogoutConfirm = false; }
 
-  confirmLogout() {
-    localStorage.clear();
-    window.location.reload();
-  }
-
-  cancelLogout() {
-    this.showLogoutConfirm = false;
-  }
-  // Replace the existing deleteConversation method and add the missing ones
-
+  // ── Delete conversation ───────────────────────────────────────────────────
   deleteConversation(id: string, e: Event): void {
     e.stopPropagation();
-    this.deleteConversationdata = id; // ✅ store the id to delete, not just true
+    this.deleteConversationdata = id;
   }
 
   confirmDelete(): void {
@@ -768,4 +704,3 @@ export class ChatComponent implements OnInit, AfterViewChecked, OnDestroy {
     this.deleteConversationdata = false;
   }
 }
-

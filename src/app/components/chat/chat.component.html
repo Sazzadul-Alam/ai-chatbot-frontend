@@ -49,7 +49,7 @@
         </svg>
         <div style="margin-left: 8px;display: flex; flex-direction: column">
           <p style="font-size: 10px;">Logged In As</p>
-          <h6 [tooltip]="userData?.name" style="max-width: 11ch; word-wrap: break-word; overflow-wrap: break-word;" class="text-truncate" >
+          <h6 [tooltip]="userData?.name" style="max-width: 11ch; word-wrap: break-word; overflow-wrap: break-word;" class="text-truncate">
             {{userData?.name ? userData.name : ''}}
           </h6>
         </div>
@@ -57,7 +57,7 @@
       <div class="col-2 tooltip-container" (click)="openLogoutConfirm()">
         <span class="tooltip-text">Logout</span>
         <svg width="22" height="22" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M18.4167 7.58333L16.8892 9.11083L19.6842 11.9167H8.66675V14.0833H19.6842L16.8892 16.8783L18.4167 18.4167L23.8334 13L18.4167 7.58333ZM4.33341 5.41667H13.0001V3.25H4.33341C3.14175 3.25 2.16675 4.225 2.16675 5.41667V20.5833C2.16675 21.775 3.14175 22.75 4.33341 22.75H13.0001V20.5833H4.33341V5.41667Z" fill="white"/>
+          <path d="M18.4167 7.58333L16.8892 9.11083L19.6842 11.9167H8.66675V14.0833H19.6842L16.8892 16.8783L18.4167 18.4167L23.8334 13L18.4167 7.58333ZM4.33341 5.41667H13.0001V3.25H4.33341C3.14175 3.25 2.16675 4.225 2.16675 5.41667V20.5833C2.16675 21.775 3.14175 22.75 4.33341 22.75H13.0001V20.5833H4.33341V5.41667Z" fill="white"/>
         </svg>
       </div>
     </div>
@@ -90,12 +90,21 @@
     </div>
 
     <!-- MESSAGES -->
+    <!--
+      KEY CHANGES vs original:
+        1. Added #scrollContainer template ref → used by onMsgsScroll() to measure scroll position
+        2. Added (scroll)="onMsgsScroll()" → fires whenever the user scrolls
+        3. Added style="position:relative" → needed for the floating scroll-down button below
+    -->
     <div class="msgs"
+         #scrollContainer
          *ngIf="messages.length > 0"
+         (scroll)="onMsgsScroll()"
          (dragover)="onDragOver($event)"
          (dragleave)="onDragLeave()"
          (drop)="onDrop($event)"
-         [class.drag-on]="isDragging">
+         [class.drag-on]="isDragging"
+         style="position: relative;">
 
       <div class="drag-cover" *ngIf="isDragging">
         <div class="drag-box">
@@ -185,6 +194,24 @@
         </ng-container>
         <div #messagesEnd></div>
       </div>
+
+      <!-- ── SCROLL-TO-BOTTOM FLOATING BUTTON ─────────────────────────────────
+           Appears only when the user has scrolled up during streaming.
+           Position: sticky to the bottom of the .msgs container.
+           Add the .scroll-down-btn styles to chat.component.css (see comment below).
+      -->
+      <button
+        class="scroll-down-btn"
+        *ngIf="userScrolled && isLoading"
+        (click)="scrollToBottom()"
+        title="Scroll to latest">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <polyline points="19 12 12 19 5 12"/>
+        </svg>
+        New content ↓
+      </button>
+
     </div>
 
     <!-- INPUT AREA -->
@@ -259,6 +286,8 @@
 
   </div>
 </div>
+
+<!-- LOGOUT CONFIRM MODAL -->
 <div class="logout-modal" *ngIf="showLogoutConfirm">
   <div class="logout-box">
     <div class="logout-icon">
@@ -274,6 +303,8 @@
     </div>
   </div>
 </div>
+
+<!-- DELETE CONVERSATION CONFIRM MODAL -->
 <div class="logout-modal" *ngIf="deleteConversationdata">
   <div class="logout-box">
     <div class="logout-icon">
