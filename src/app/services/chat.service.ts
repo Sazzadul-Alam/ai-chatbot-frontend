@@ -133,7 +133,7 @@ export class ChatService {
       const count = this.getGuestRequestCount();
       if (count >= this.GUEST_MAX_REQUESTS) {
         return new Observable<string>(observer => {
-          observer.error(new Error('Guest access limit reached. Kindly log in and try again.'));
+          observer.error(new Error('You’ve hit the guest limit. Log in to unlock full access.'));
         });
       }
       this.incrementGuestRequestCount();
