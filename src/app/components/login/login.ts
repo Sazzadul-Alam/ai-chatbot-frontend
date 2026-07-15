@@ -4,13 +4,13 @@ import { CommonModule } from '@angular/common';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { ChatService } from '../../services/chat.service';
 import { Registration } from '../registration/registration';
-import { RecaptchaChallengeComponent } from '../recaptcha-challenge/recaptcha-challenge';
+import { RecaptchaModule } from 'ng-recaptcha';
 import {Router} from '@angular/router';
 import {ToastService} from '../../shared/toast';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, CommonModule, RecaptchaChallengeComponent],
+  imports: [FormsModule, CommonModule, RecaptchaModule],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -22,8 +22,7 @@ export class Login {
   errorMessage: string = '';
 
   captchaVerified: boolean = false;
-  captchaLoading: boolean = false;
-  showChallenge: boolean = false;
+  captchaToken: string | null = null;
 
   private chatService = inject(ChatService);
   private cdr = inject(ChangeDetectorRef);
@@ -36,20 +35,13 @@ export class Login {
     private router: Router,
   ) {}
 
-  onCaptchaClick(): void {
-    if (!this.captchaVerified) {
-      this.showChallenge = true;
-    }
-  }
-
-  onCaptchaVerified(): void {
-    this.showChallenge = false;
-    this.captchaLoading = true;
-    setTimeout(() => {
-      this.captchaLoading = false;
-      this.captchaVerified = true;
-      this.cdr.markForCheck();
-    }, 1200);
+  // Fired by the real Google reCAPTCHA widget. `token` is null when the captcha
+  // expires or errors; a non-null token means the user passed the challenge.
+  onCaptchaResolved(token: string | null): void {
+    this.captchaToken = token;
+    this.captchaVerified = !!token;
+    if (token) this.errorMessage = '';
+    this.cdr.markForCheck();
   }
 
   onLogin(): void {
@@ -57,7 +49,7 @@ export class Login {
       this.errorMessage = 'Please fill in all fields.';
       return;
     }
-    if (!this.captchaVerified) {
+    if (!this.captchaVerified || !this.captchaToken) {
       this.errorMessage = 'Please complete the reCAPTCHA.';
       return;
     }
@@ -68,6 +60,8 @@ export class Login {
     const formData = new FormData();
     formData.append('username', this.userName);
     formData.append('password', this.password);
+    // Send the reCAPTCHA token so the backend can verify it with the secret key.
+    formData.append('recaptchaToken', this.captchaToken);
 
     this.chatService.login(formData).subscribe({
       next: (res) => {

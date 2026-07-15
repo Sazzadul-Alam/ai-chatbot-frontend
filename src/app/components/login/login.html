@@ -58,35 +58,14 @@
       </div>
     </div>
 
-    <!-- reCAPTCHA row -->
-    <div class="captcha-row" (click)="onCaptchaClick()">
-      <div class="captcha-left">
-        <div class="cap-box" [class.spinning]="captchaLoading" [class.done]="captchaVerified">
-          <svg *ngIf="captchaVerified" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <polyline points="1.5,6 5,9.5 10.5,2.5" stroke="#fff" stroke-width="2.2"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="cap-label">{{ captchaVerified ? 'Verified' : "I'm not a robot" }}</span>
-      </div>
-      <div class="cap-right">
-        <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-          <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
-          <path d="M32 14 L46 24 L46 40 L32 50 L18 40 L18 24 Z" fill="none" stroke="rgba(77,163,245,0.55)" stroke-width="1.5"/>
-          <path d="M32 20 L41 26.5 L41 37.5 L32 44 L23 37.5 L23 26.5 Z" fill="rgba(77,163,245,0.12)" stroke="rgba(77,163,245,0.35)" stroke-width="1"/>
-          <circle cx="32" cy="32" r="5" fill="rgba(77,163,245,0.45)"/>
-        </svg>
-        <span class="cap-brand">reCAPTCHA</span>
-        <span class="cap-sub">Privacy · Terms</span>
-      </div>
+    <!-- Real Google reCAPTCHA v2 (site key + dark theme provided via RECAPTCHA_SETTINGS) -->
+    <div class="captcha-row">
+      <re-captcha
+        (resolved)="onCaptchaResolved($event)"
+        (errored)="onCaptchaResolved(null)"
+        errorMode="handled">
+      </re-captcha>
     </div>
-
-    <!-- Challenge modal -->
-    <app-recaptcha-challenge
-      *ngIf="showChallenge"
-      (verified)="onCaptchaVerified()"
-      (closed)="showChallenge = false">
-    </app-recaptcha-challenge>
 
     <!-- Login button -->
     <button
